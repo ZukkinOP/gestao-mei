@@ -2364,8 +2364,11 @@ function mapVagaRow(row){
     if(v) acomp[col] = v;
   });
 
+  const prioVal = colStr(row,['PRIORIDADE','Prioridade']).toLowerCase();
+  const isPrio = prioVal==='sim' || prioVal==='s' || prioVal==='alta' || prioVal==='yes';
   return {
     prioridade: colStr(row,['PRIORIDADE','Prioridade']),
+    prio: isPrio,
     respOp: colStr(row,['RESPONSÁVEL OP','RESPONSAVEL OP','Responsável OP']),
     respRs: colStr(row,['RESPONSÁVEL RS','RESPONSAVEL RS','Responsável RS','RESPONSÁVEL R&S']),
     nomeVaga: colStr(row,['NOME DA VAGA','Nome da Vaga','Nome da vaga']),
