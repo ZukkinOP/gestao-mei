@@ -626,13 +626,53 @@ kbd{background:#f1f3f7;border:1px solid var(--line);border-radius:5px;padding:1p
         <p>É o <b>pipeline de vagas de pesquisador</b> (baseado na planilha de vagas). <b>Cada linha é uma vaga.</b></p>
         <ul>
           <li><b>Nº e prioridade:</b> a coluna “Nº” numera as vagas em sequência. Clique no <b>quadradinho</b> ao lado do número para marcar como <b>prioritária</b> (fica vermelho). Há filtro “Só prioritárias”.</li>
-          <li><b>Responsáveis:</b> “Resp. OP” e “Resp. R&amp;S” são menus suspensos. Para adicionar ou excluir nomes, use o botão <b>“+ Responsáveis”</b>.</li>
-          <li><b>Dados da vaga:</b> Vaga (cidade), UF, Cliente, Motivo, Quem substituirá, Regime, Horas, Status, Aprovado (nome do candidato aprovado), Plat, R$/dia, Dias/mês, R$/mês, Itens, Abertura OP e R&amp;S, Fechamento e Andamento.</li>
+          <li><b>Responsáveis:</b> “Resp. OP” e “Resp. R&amp;S” são menus suspensos. Para adicionar ou excluir nomes, use o botão <b>”+ Responsáveis”</b>.</li>
+          <li><b>Dados da vaga:</b> Vaga (cidade), UF, Cliente, Motivo, Quem substituirá, Regime, Horas, Status, Aprovado (nome do candidato aprovado), Plat, R$/dia, Dias/mês, R$/mês, Itens, Abertura OP e R&amp;S, e Andamento.</li>
           <li><b>Rota:</b> passe o mouse sobre a célula para ver a rota completa da vaga no tooltip.</li>
-          <li><b>Acomp. R&amp;S:</b> clique no lápis para abrir o quadro — quantas entrevistas, testes e stands cada recrutadora (Mari, Emilly, MA) fez naquela vaga.</li>
-          <li><b>SLA (dias)</b> = hoje − data de abertura; sobe sozinho a cada dia.</li>
-          <li>No topo: cards de resumo (<b>SLA Vagas Fáceis</b> e <b>SLA Vagas Difíceis</b>), tabelas de desempenho por <b>Resp. OP</b> e por <b>Resp. R&amp;S</b> (% aprovadas, SLA separado por dificuldade), <b>SLA por região</b> (verde = fácil, vermelho = difícil) e vagas por status. A classificação é automática: cidades com histórico de SLA alto são marcadas como difíceis.</li>
+          <li><b>Acomp. R&amp;S:</b> clique no lápis para abrir o quadro — quantas entrevistas, testes e stands cada recrutadora fez naquela vaga.</li>
           <li><b>Botões:</b> “+ Vaga”, “+ Responsáveis” e “Importar planilha de vagas” (atualiza os dados a partir de um .xlsx/CSV).</li>
+        </ul>
+
+        <h4>📐 Como funciona o SLA Fácil e SLA Difícil (Recrutamento)</h4>
+        <p>O SLA mede <b>quantos dias uma vaga leva para ser preenchida</b>. Ele é calculado automaticamente a partir do cruzamento entre a planilha de <b>Recrutamento</b> e a planilha de <b>SLA das Vagas</b>.</p>
+
+        <p><b>1. Classificação da cidade: Fácil ou Difícil</b></p>
+        <ul>
+          <li>O sistema possui um banco de dados interno com a <b>população de cada cidade brasileira</b>.</li>
+          <li><b>Cidade Fácil:</b> população <b>≥ 100.000 habitantes</b> — meta de SLA = <b>10 dias</b>.</li>
+          <li><b>Cidade Difícil:</b> população <b>&lt; 100.000 habitantes</b> — meta de SLA = <b>14 dias</b>.</li>
+          <li><b>Cidade Desconhecida</b> (não encontrada no banco): tratada como <b>difícil</b> (14 dias).</li>
+        </ul>
+
+        <p><b>2. Cálculo do SLA de cada vaga (em dias)</b></p>
+        <ul>
+          <li>O sistema busca a vaga na planilha de <b>SLA das Vagas</b> pelo nome da cidade.</li>
+          <li><b>Data inicial</b> = <b>Data de Reabertura</b> da planilha de SLA das Vagas. Se não encontrar, usa a <b>Abertura OP</b> da planilha de Recrutamento.</li>
+          <li><b>Data final</b> = <b>Data de Fechamento</b> da planilha de SLA das Vagas. Se a vaga ainda não tem fechamento, usa a <b>data de hoje</b>.</li>
+          <li><b>SLA = Data final − Data inicial</b> (em dias corridos).</li>
+        </ul>
+
+        <p><b>3. Quais vagas entram no cálculo</b></p>
+        <ul>
+          <li>Apenas vagas com status <b>”Em recrutamento”</b> na planilha de Recrutamento.</li>
+          <li>Vagas em <b>Stand by</b>, <b>Candidato enviado</b>, <b>Vaga preenchida</b> ou <b>Vaga encerrada</b> <b>não entram</b> no cálculo de SLA.</li>
+        </ul>
+
+        <p><b>4. Como os resumos são gerados</b></p>
+        <ul>
+          <li><b>SLA Vagas Fáceis</b> (card e tabelas) = <b>média</b> dos SLAs de todas as vagas em cidades com ≥ 100.000 hab.</li>
+          <li><b>SLA Vagas Difíceis</b> (card e tabelas) = <b>média</b> dos SLAs de todas as vagas em cidades com &lt; 100.000 hab. (inclui cidades desconhecidas).</li>
+          <li>As tabelas <b>”Vagas por Responsável OP”</b> e <b>”Vagas por Responsável R&amp;S”</b> mostram essa média por analista.</li>
+          <li>A tabela <b>”SLA por Região”</b> mostra a média por região geográfica (Sul, Sudeste, etc.).</li>
+        </ul>
+
+        <p><b>5. Exemplo prático</b></p>
+        <ul>
+          <li>Vaga em <b>Bauru (SP)</b> — pop. 381.706 → <b>Fácil</b> (meta 10 dias).</li>
+          <li>Reabertura no SLA: 29/06/2026. Sem fechamento → usa hoje.</li>
+          <li>Se hoje é 19/08/2026: SLA = 51 dias. Entra na média de <b>SLA Fácil</b>.</li>
+          <li>Vaga em <b>Tapejara (PR)</b> — pop. 15.869 → <b>Difícil</b> (meta 14 dias).</li>
+          <li>Reabertura no SLA: 09/02/2026. Sem fechamento → SLA = 191 dias. Entra na média de <b>SLA Difícil</b>.</li>
         </ul>
 
         <h4>🔄 Rotatividade</h4>
@@ -647,12 +687,14 @@ kbd{background:#f1f3f7;border:1px solid var(--line);border-radius:5px;padding:1p
         </ul>
 
         <h4>🔒 SLA das Vagas</h4>
-        <p>Réplica da planilha de SLA (acesso <b>protegido por senha</b>, só o time de R&amp;S). <b>Cada linha é uma vaga</b> com o tempo até o fechamento.</p>
+        <p>Dados sincronizados da planilha de SLA (acesso <b>protegido por senha</b>, só o time de R&amp;S). <b>Cada linha é uma vaga</b> com o tempo até o fechamento, organizada <b>mês a mês</b>.</p>
         <ul>
-          <li><b>Cálculo do SLA:</b> vaga <b>Preenchida</b> = Fechamento − Reabertura; <b>Em recrutamento</b> = hoje − Reabertura (sobe sozinho a cada dia).</li>
-          <li>Preencha: Responsável, Local da vaga, N°, Estado, Data de Abertura, Data de Reabertura, Data Fechamento e Status. O <b>SLA é calculado automaticamente</b>.</li>
-          <li><b>Resumos:</b> SLA Vagas Fáceis e SLA Vagas Difíceis, SLA por Recrutador e por Região (separados por dificuldade); e a contagem de preenchidas × em recrutamento.</li>
-          <li><b>Botões:</b> “+ Vaga”, “Importar planilha SLA”, “Baixar .xlsx” e o campo de Mês.</li>
+          <li><b>Seletor de mês:</b> alterna entre as abas mensais da planilha de SLA (Jan, Fev, Mar...). Cada mês é um snapshot separado para mensuração mensal.</li>
+          <li><b>Cálculo do SLA:</b> vaga <b>Preenchida</b> = Data Fechamento − Data Reabertura; <b>Em recrutamento</b> = hoje − Data Reabertura (sobe sozinho a cada dia).</li>
+          <li><b>Campos:</b> Responsável, Local da vaga, N°, Estado, Data de Abertura, Data de Reabertura, Data Fechamento e Status. O <b>SLA é calculado automaticamente</b>.</li>
+          <li><b>Resumos:</b> cards de SLA Fácil e Difícil (mesma lógica de população descrita acima), SLA por Recrutador e por Região; contagem de preenchidas × em recrutamento.</li>
+          <li><b>Sincronização:</b> os dados vêm automaticamente da planilha de SLA ao clicar em <b>”Sincronizar”</b>. Também é possível importar manualmente via “+ Vaga”, “Importar planilha SLA” e exportar com “Baixar .xlsx”.</li>
+          <li><b>Cruzamento com Recrutamento:</b> a Data de Reabertura e a Data de Fechamento desta aba são usadas automaticamente para calcular o SLA Fácil e Difícil na aba de Recrutamento (cruzamento por nome da cidade).</li>
         </ul>
       </div>
     </div>
