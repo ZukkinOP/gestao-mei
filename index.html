@@ -1548,7 +1548,7 @@ function slaFechamentoLookup(cidade){
   }
   return null;
 }
-function recAging(v){ if(!recIsOpen(v)) return null; const ab=recAbertura(v); if(!ab) return null; const fech=slaFechamentoLookup(v.cidade||normCidade(v.nomeVaga)); const end=fech||new Date(); return Math.max(0,Math.round((end.getTime()-ab.getTime())/86400000)); }
+function recAging(v){ var st=(v.status||'').toLowerCase(); if(st.indexOf('recrut')<0) return null; const ab=recAbertura(v); if(!ab) return null; const fech=slaFechamentoLookup(v.cidade||normCidade(v.nomeVaga)); const end=fech||new Date(); return Math.max(0,Math.round((end.getTime()-ab.getTime())/86400000)); }
 function pctOf(n,d){ return d?Math.round(n/d*100):0; }
 function percentile(arr,p){ if(!arr.length) return null; var s=arr.slice().sort(function(a,b){return a-b;}); var i=(p/100)*(s.length-1); var lo=Math.floor(i), hi=Math.ceil(i); if(lo===hi) return Math.round(s[lo]); return Math.round(s[lo]+(s[hi]-s[lo])*(i-lo)); }
 /* === Banco de cidades (população + prazo SLA) === */
