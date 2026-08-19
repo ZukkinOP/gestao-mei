@@ -2296,7 +2296,7 @@ const SHEETS_CFG = {
 // Map sheet tab "Jan/2026" → app key "Jan2026"
 function sheetTabToKey(tab){ return tab.replace('/',''); }
 
-const VAGAS_EXCL_STATUS = ['preenchida','cancelada','fechada','vaga preenchida','vaga encerrada'];
+const VAGAS_EXCL_STATUS = ['preenchida','cancelada','fechada','vaga preenchida','vaga encerrada','congelada','vaga congelada'];
 
 async function fetchSheet(spreadsheetId, sheetName){
   const url = 'https://docs.google.com/spreadsheets/d/'+spreadsheetId+'/gviz/tq?tqx=out:json&sheet='+encodeURIComponent(sheetName);
@@ -2420,6 +2420,8 @@ function mapSlaRow(row){
   const resp = colStr(row,['Responsável','RESPONSÁVEL','Responsavel','RESPONSAVEL']);
   const local = colStr(row,['Local da vaga','LOCAL DA VAGA','Local da Vaga']);
   if(!resp && !local) return null;
+  const st = colStr(row,['Status','STATUS','status']).toLowerCase();
+  if(st.indexOf('congel')>=0 || st.indexOf('cancelad')>=0) return null;
   return {
     responsavel: resp,
     local: local,
