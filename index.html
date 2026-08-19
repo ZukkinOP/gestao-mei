@@ -721,6 +721,7 @@ function migrate(s){
     if(s.recVer!==REC_VER || !s.vagasRec || !s.vagasRec.length){ s.vagasRec=stamp(recSeed()); s.recVer=REC_VER; } else { stamp(s.vagasRec); }
     if(!Array.isArray(s.recAddOp)) s.recAddOp=[]; if(!Array.isArray(s.recAddRs)) s.recAddRs=[];
     if(s.slaVer!==SLA_VER || !Array.isArray(s.slaVagas)){ s.slaVagas=stamp(slaSeed()); s.slaVer=SLA_VER; if(!s.slaMes) s.slaMes='Agosto'; } else { stamp(s.slaVagas); }
+    if(!s.slaMeses) s.slaMeses={}; if(!s.slaMesTab) s.slaMesTab='';
     if(!s.mesAtual || !s.mesesPagamento[s.mesAtual]) s.mesAtual=Object.keys(s.mesesPagamento)[0]||'Jul2026';
     if(!Object.keys(s.mesesPagamento).length){ s.mesesPagamento['Jul2026']=[]; s.mesAtual='Jul2026'; }
     return s;
@@ -1112,7 +1113,7 @@ function genRowRecalc(tr,obj,calcFn,map){
 /* ============================================================
    EDIT HANDLING (event delegation per table)
    ============================================================ */
-function collArr(coll){ return coll==='pagamentos'?pagList():state[coll]; }
+function collArr(coll){ if(coll==='pagamentos') return pagList(); if(coll==='slaVagas') return typeof slaCurrentVagas==='function'?slaCurrentVagas():state[coll]; return state[coll]; }
 function findRec(coll,id){ return collArr(coll).find(x=>x._id===id); }
 function bindTable(tableId, coll, opts){
   const el=document.getElementById(tableId);
@@ -1915,47 +1916,35 @@ function slaSeed(){ return JSON.parse(JSON.stringify((typeof SLA!=='undefined'&&
 var SLA_STATUS=['Em recrutamento','Preenchida'];
 var MES_NOME_NUM={janeiro:1,fevereiro:2,marco:3,abril:4,maio:5,junho:6,julho:7,agosto:8,setembro:9,outubro:10,novembro:11,dezembro:12};
 var MES_NOME_LABEL=['','Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
-function slaMonthList(){
-  var set={};
-  (state.slaVagas||[]).forEach(function(v){
-    var d=parseDMY(v.reabertura)||parseDMY(v.abertura); if(!d) return;
-    var k=d.getFullYear()+'-'+(d.getMonth()+1);
-    set[k]={y:d.getFullYear(),m:d.getMonth()+1};
-  });
-  var arr=Object.keys(set).map(function(k){return set[k];});
-  arr.sort(function(a,b){return (a.y-b.y)||(a.m-b.m);});
-  return arr;
-}
-function slaMonthEnd(y,m){ return new Date(y,m,0,23,59,59); }
-function slaFilteredByMonth(vagas){
+var SLA_TAB_LABEL={Jan:'Janeiro',Fev:'Fevereiro',Mar:'Março',Abr:'Abril',Mai:'Maio',Jun:'Junho',Jul:'Julho',Ago:'Agosto',Set:'Setembro',Out:'Outubro',Nov:'Novembro',Dez:'Dezembro'};
+function slaCurrentVagas(){
   var sel=document.getElementById('slaMesInp');
-  var val=(sel&&sel.value)||'';
-  if(!val) return vagas;
-  var pp=val.split('-'); var fy=+pp[0], fm=+pp[1];
-  var cutoff=slaMonthEnd(fy,fm);
-  return vagas.filter(function(v){
-    var d=parseDMY(v.reabertura)||parseDMY(v.abertura);
-    if(!d) return false;
-    return d<=cutoff;
-  });
+  var key=(sel&&sel.value)||state.slaMesTab||'';
+  if(key && state.slaMeses && state.slaMeses[key]) return state.slaMeses[key];
+  if(state.slaMeses){
+    var keys=Object.keys(state.slaMeses);
+    if(keys.length) return state.slaMeses[keys[keys.length-1]];
+  }
+  return state.slaVagas||[];
 }
 function slaPopulateMonths(){
   var sel=document.getElementById('slaMesInp'); if(!sel) return;
-  var cur=sel.value||(state.slaMes?'':'');
-  var months=slaMonthList();
+  var cur=sel.value||(state.slaMesTab||'');
   var html='';
-  months.forEach(function(p){
-    var v=p.y+'-'+p.m;
-    var lbl='Até '+MES_NOME_LABEL[p.m]+' '+p.y;
-    html+='<option value="'+v+'">'+lbl+'</option>';
-  });
-  html+='<option value="">Todos (sem filtro)</option>';
+  if(state.slaMeses){
+    var tabs=Object.keys(state.slaMeses);
+    tabs.forEach(function(t){
+      var lbl=SLA_TAB_LABEL[t]||t;
+      html+='<option value="'+t+'">'+lbl+'</option>';
+    });
+  }
   sel.innerHTML=html;
-  /* Try to restore selection or pick the last month */
   if(cur){ sel.value=cur; }
-  if(!sel.value && months.length){ sel.value=months[months.length-1].y+'-'+months[months.length-1].m; }
-  /* Sync state.slaMes */
-  if(sel.value){ var pp=sel.value.split('-'); state.slaMes=MES_NOME_LABEL[+pp[1]]||''; }
+  if(!sel.value){
+    var opts=sel.options;
+    if(opts.length) sel.value=opts[opts.length-1].value;
+  }
+  if(sel.value){ state.slaMesTab=sel.value; state.slaMes=SLA_TAB_LABEL[sel.value]||sel.value; }
 }
 function slaCalc(v){
   var reab=parseDMY(v.reabertura); if(!reab) return null;
@@ -1977,7 +1966,7 @@ var SLA_COLS=[
 function slaFiltered(){
   var q=(document.getElementById('slaSearch').value||'').toLowerCase().trim();
   var s=document.getElementById('slaStatus').value;
-  var base=slaFilteredByMonth(state.slaVagas||[]);
+  var base=slaCurrentVagas();
   return base.filter(function(v){
     if(s && (v.status||'')!==s) return false;
     if(q){ var hay=((v.responsavel||'')+' '+(v.local||'')+' '+(v.estado||'')).toLowerCase(); if(hay.indexOf(q)<0) return false; }
@@ -2002,11 +1991,11 @@ function slaRenderTable(){
   });
   html+='</tbody>'; t.innerHTML=html;
   t.style.width=t.style.minWidth=(SLA_COLS.reduce(function(a,c){return a+c.w;},0)+128)+'px';
-  var info=document.getElementById('slaInfo'); if(info) info.textContent=rows.length+' de '+(state.slaVagas||[]).length+' vagas';
+  var cur=slaCurrentVagas(); var info=document.getElementById('slaInfo'); if(info) info.textContent=rows.length+' de '+cur.length+' vagas';
 }
 function slaCityFn(v){ return (v.local||'').trim(); }
 function slaRenderSummary(){
-  var all=slaFilteredByMonth(state.slaVagas||[]);
+  var all=slaCurrentVagas();
   var slaF=[],slaD=[];
   all.forEach(function(v){ var s=slaCalc(v); if(s==null) return; var dif=vagaDificuldade(slaCityFn(v),v.estado,s); if(dif.tipo==='dificil'||dif.tipo==='desconhecida') slaD.push(s); else slaF.push(s); });
   var avgF=slaF.length?Math.round(slaF.reduce(function(a,b){return a+b;},0)/slaF.length):null;
@@ -2044,8 +2033,8 @@ function renderSla(){
   slaRenderSummary(); slaRenderTable();
 }
 function slaRecalc(tr,rec){ var td=tr.querySelector('[data-slacalc]'); if(td){ var s=slaCalc(rec); td.textContent=(s==null?'—':(s+' d')); } slaRenderSummary(); }
-function addSla(){ (state.slaVagas||(state.slaVagas=[])).unshift({_id:freshId(),responsavel:'',local:'Nova vaga',num:'',estado:'',abertura:'',reabertura:'',fechamento:'',status:'Em recrutamento'}); save(); renderSla(); toast('Vaga adicionada'); focusFirst('slaTable'); }
-function exportSla(){ if(typeof XLSX==='undefined'){toast('Indisponível');return;} var rows=(state.slaVagas||[]).map(function(v){ var s=slaCalc(v); return {'Responsavel':v.responsavel,'Local da vaga':v.local,'N':v.num,'Estado':v.estado,'Data de Abertura':v.abertura,'Data de Reabertura':v.reabertura,'Data Fechamento':v.fechamento,'SLA':(s==null?'':s),'Status':v.status}; }); if(!rows.length){toast('Nada para exportar');return;} var wb=XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(rows),'SLA'); XLSX.writeFile(wb,('SLA_'+(state.slaMes||'vagas')+'.xlsx').replace(/\s+/g,'_')); toast('SLA exportado'); }
+function addSla(){ var arr=slaCurrentVagas(); arr.unshift({_id:freshId(),responsavel:'',local:'Nova vaga',num:'',estado:'',abertura:'',reabertura:'',fechamento:'',status:'Em recrutamento'}); save(); renderSla(); toast('Vaga adicionada'); focusFirst('slaTable'); }
+function exportSla(){ if(typeof XLSX==='undefined'){toast('Indisponível');return;} var rows=slaCurrentVagas().map(function(v){ var s=slaCalc(v); return {'Responsavel':v.responsavel,'Local da vaga':v.local,'N':v.num,'Estado':v.estado,'Data de Abertura':v.abertura,'Data de Reabertura':v.reabertura,'Data Fechamento':v.fechamento,'SLA':(s==null?'':s),'Status':v.status}; }); if(!rows.length){toast('Nada para exportar');return;} var wb=XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(rows),'SLA'); XLSX.writeFile(wb,('SLA_'+(state.slaMes||'vagas')+'.xlsx').replace(/\s+/g,'_')); toast('SLA exportado'); }
 function importSlaSheet(file){
   var fr=new FileReader();
   fr.onload=function(){
@@ -2062,7 +2051,7 @@ function importSlaSheet(file){
         out.push({_id:freshId(),responsavel:resp,local:loc,num:g(row,iN).replace(/\.0$/,''),estado:g(row,iE).toUpperCase(),abertura:g(row,iA),reabertura:g(row,iRe),fechamento:g(row,iF),status:g(row,iS)||'Em recrutamento'});
       }
       if(!out.length){ toast('Nenhuma vaga encontrada'); return; }
-      state.slaVagas=out; save(); renderSla(); toast(out.length+' vagas de SLA importadas ('+best.nm+')');
+      var selTab=state.slaMesTab||''; if(selTab && state.slaMeses){ state.slaMeses[selTab]=out; } else { state.slaVagas=out; } save(); renderSla(); toast(out.length+' vagas de SLA importadas ('+best.nm+')');
     }catch(e){ toast('Falha ao ler a planilha'); }
   };
   fr.readAsArrayBuffer(file);
@@ -2180,7 +2169,7 @@ function init(){
   var _slRb=document.getElementById('slaReimport'), _slF=document.getElementById('slaFile');
   if(_slRb&&_slF){ _slRb.addEventListener('click',function(){_slF.click();}); _slF.addEventListener('change',function(e){ if(e.target.files&&e.target.files[0]) importSlaSheet(e.target.files[0]); e.target.value=''; }); }
   var _slEx=document.getElementById('slaExport'); if(_slEx) _slEx.addEventListener('click',exportSla);
-  var _slMi=document.getElementById('slaMesInp'); if(_slMi) _slMi.addEventListener('change',function(){ if(_slMi.value){ var pp=_slMi.value.split('-'); state.slaMes=MES_NOME_LABEL[+pp[1]]||''; } else { state.slaMes=''; } save(); slaRenderSummary(); slaRenderTable(); });
+  var _slMi=document.getElementById('slaMesInp'); if(_slMi) _slMi.addEventListener('change',function(){ state.slaMesTab=_slMi.value||''; state.slaMes=SLA_TAB_LABEL[_slMi.value]||_slMi.value||''; save(); slaRenderSummary(); slaRenderTable(); });
   bindTable('slaTable','slaVagas',{recalc:slaRecalc,render:renderSla});
   var _slt=document.getElementById('slaTable'); if(_slt) _slt.addEventListener('change',function(e){ if(e.target.closest('select')){ var tr=e.target.closest('tr[data-id]'); if(tr){ var rec=findRec('slaVagas',tr.dataset.id); if(rec){ var td=tr.querySelector('[data-slacalc]'); if(td){ var s=slaCalc(rec); td.textContent=(s==null?'—':(s+' d')); } slaRenderSummary(); } } } });
   var _slaLastDay=new Date().toDateString();
@@ -2407,24 +2396,19 @@ async function syncFromSheets(){
       if(keys.length) state.mesAtual = keys[keys.length-1];
     }
 
-    // 3) Sync SLA das Vagas (all month tabs, dedup by local — latest tab wins)
-    const slaMap = new Map();
+    // 3) Sync SLA das Vagas (each month tab stored separately)
+    if(!state.slaMeses) state.slaMeses={};
     for(const tab of SHEETS_CFG.sla.tabs){
       try {
         const slaRows = await fetchSheet(SHEETS_CFG.sla.id, tab);
         const mapped = slaRows.map(mapSlaRow).filter(Boolean);
-        for(const v of mapped){
-          const key = (v.local||'').trim().toLowerCase();
-          if(key) slaMap.set(key, v);
+        if(mapped.length){
+          stamp(mapped);
+          state.slaMeses[tab] = mapped;
         }
       } catch(e){
         console.warn('Sync SLA tab "'+tab+'" falhou:', e.message);
       }
-    }
-    if(slaMap.size){
-      const dedupSla = Array.from(slaMap.values());
-      stamp(dedupSla);
-      state.slaVagas = dedupSla;
     }
 
     save();
