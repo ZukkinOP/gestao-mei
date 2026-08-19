@@ -2407,20 +2407,24 @@ async function syncFromSheets(){
       if(keys.length) state.mesAtual = keys[keys.length-1];
     }
 
-    // 3) Sync SLA das Vagas (all month tabs)
-    const allSla = [];
+    // 3) Sync SLA das Vagas (all month tabs, dedup by local — latest tab wins)
+    const slaMap = new Map();
     for(const tab of SHEETS_CFG.sla.tabs){
       try {
         const slaRows = await fetchSheet(SHEETS_CFG.sla.id, tab);
         const mapped = slaRows.map(mapSlaRow).filter(Boolean);
-        allSla.push(...mapped);
+        for(const v of mapped){
+          const key = (v.local||'').trim().toLowerCase();
+          if(key) slaMap.set(key, v);
+        }
       } catch(e){
         console.warn('Sync SLA tab "'+tab+'" falhou:', e.message);
       }
     }
-    if(allSla.length){
-      stamp(allSla);
-      state.slaVagas = allSla;
+    if(slaMap.size){
+      const dedupSla = Array.from(slaMap.values());
+      stamp(dedupSla);
+      state.slaVagas = dedupSla;
     }
 
     save();
