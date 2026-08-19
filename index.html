@@ -2251,7 +2251,10 @@ async function fetchSheet(spreadsheetId, sheetName){
   // strip JSONP wrapper: google.visualization.Query.setResponse({...})
   const start = txt.indexOf('{'); const end = txt.lastIndexOf('}');
   if(start===-1||end===-1) throw new Error('Resposta inválida da planilha');
-  const data = JSON.parse(txt.substring(start, end+1));
+  let jsonTxt = txt.substring(start, end+1);
+  // Convert Date(y,m,d) to "Date(y,m,d)" so JSON.parse works
+  jsonTxt = jsonTxt.replace(/new Date\((\d+,\d+,\d+(?:,\d+)*)\)/g, '"Date($1)"');
+  const data = JSON.parse(jsonTxt);
   if(!data.table) throw new Error('Sem dados na aba: '+sheetName);
   // extract headers from first row
   const cols = data.table.cols.map(c=>(c.label||'').trim());
@@ -2259,10 +2262,14 @@ async function fetchSheet(spreadsheetId, sheetName){
     const obj={};
     (r.c||[]).forEach((cell,i)=>{
       if(i<cols.length && cols[i]){
-        let val = cell? (cell.v!=null? cell.v : (cell.f||'')) : '';
-        if(typeof val==='string' && /^Date\(\d+,\d+,\d+\)$/.test(val)){
-          const m=val.match(/^Date\((\d+),(\d+),(\d+)\)$/);
-          if(m){ const dd=String(+m[3]).padStart(2,'0'), mm=String(+m[2]+1).padStart(2,'0'); val=dd+'/'+mm+'/'+m[1]; }
+        let val = '';
+        if(cell){
+          val = cell.v!=null ? cell.v : (cell.f||'');
+          // Dates: cell.v = "Date(y,m,d)" → use cell.f ("dd/mm/yyyy") or convert
+          if(typeof val==='string' && /Date\(\d/.test(val)){
+            if(cell.f){ val=cell.f; }
+            else { const dm=val.match(/Date\((\d+),(\d+),(\d+)/); if(dm){ val=String(+dm[3]).padStart(2,'0')+'/'+String(+dm[2]+1).padStart(2,'0')+'/'+dm[1]; } }
+          }
         }
         obj[cols[i]] = val;
       }
