@@ -1534,7 +1534,7 @@ function normCidade(s){ return String(s==null?'':s).replace(/\s+\d+\s*$/,'').rep
 function parseDMY(s){ const m=String(s||'').trim().match(/^(\d{1,2})\/(\d{1,2})\/(\d{2,4})/); if(!m) return null; let y=+m[3]; if(y<100)y+=2000; const d=new Date(y,(+m[2])-1,+m[1]); return isNaN(d.getTime())?null:d; }
 function recAbertura(v){ return parseDMY(v.aberturaOp)||parseDMY(v.aberturaRs); }
 function recIsOpen(v){ return REC_OPEN.indexOf(v.status)>=0; }
-function slaFechamentoLookup(cidade){
+function slaLookup(cidade){
   if(!cidade) return null;
   var key=cidade.trim().toLowerCase();
   if(state.slaMeses){
@@ -1542,13 +1542,13 @@ function slaFechamentoLookup(cidade){
     for(var t=tabs.length-1;t>=0;t--){
       var arr=state.slaMeses[tabs[t]]||[];
       for(var i=0;i<arr.length;i++){
-        if((arr[i].local||'').trim().toLowerCase()===key && arr[i].fechamento) return parseDMY(arr[i].fechamento);
+        if((arr[i].local||'').trim().toLowerCase()===key) return arr[i];
       }
     }
   }
   return null;
 }
-function recAging(v){ var st=(v.status||'').toLowerCase(); if(st.indexOf('recrut')<0) return null; const ab=recAbertura(v); if(!ab) return null; const fech=slaFechamentoLookup(v.cidade||normCidade(v.nomeVaga)); const end=fech||new Date(); return Math.max(0,Math.round((end.getTime()-ab.getTime())/86400000)); }
+function recAging(v){ var st=(v.status||'').toLowerCase(); if(st.indexOf('recrut')<0) return null; var city=v.cidade||normCidade(v.nomeVaga); var sla=slaLookup(city); var ab=sla?parseDMY(sla.reabertura):null; if(!ab) ab=recAbertura(v); if(!ab) return null; var fech=sla?parseDMY(sla.fechamento):null; var end=fech||new Date(); return Math.max(0,Math.round((end.getTime()-ab.getTime())/86400000)); }
 function pctOf(n,d){ return d?Math.round(n/d*100):0; }
 function percentile(arr,p){ if(!arr.length) return null; var s=arr.slice().sort(function(a,b){return a-b;}); var i=(p/100)*(s.length-1); var lo=Math.floor(i), hi=Math.ceil(i); if(lo===hi) return Math.round(s[lo]); return Math.round(s[lo]+(s[hi]-s[lo])*(i-lo)); }
 /* === Banco de cidades (população + prazo SLA) === */
