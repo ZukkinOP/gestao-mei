@@ -65,6 +65,12 @@ header .spacer{flex:1}
 .hbtn.solid:hover{background:#eafcf8}
 .savestate{font-size:11px;opacity:.9;display:flex;align-items:center;gap:6px;min-width:78px}
 .savestate .d{width:8px;height:8px;border-radius:50%;background:#a7f3d0}
+.sync-btn{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.25);color:#fff;padding:4px 12px;border-radius:6px;font-size:12px;cursor:pointer;display:flex;align-items:center;gap:5px;transition:background .2s}
+.sync-btn:hover{background:rgba(255,255,255,.25)}
+.sync-btn:disabled{opacity:.5;cursor:not-allowed}
+.sync-btn .sync-icon{display:inline-block;width:14px;height:14px}
+.sync-btn.syncing .sync-icon{animation:spin 1s linear infinite}
+@keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}
 
 /* ---------- Tabs ---------- */
 nav{background:var(--panel);display:flex;gap:2px;padding:0 14px;border-bottom:1px solid var(--line);position:sticky;top:52px;z-index:40;box-shadow:var(--shadow)}
@@ -314,6 +320,7 @@ kbd{background:#f1f3f7;border:1px solid var(--line);border-radius:5px;padding:1p
   <img class="zk-logo" src="data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0idXRmLTgiPz4NCjwhLS0gR2VuZXJhdG9yOiBBZG9iZSBJbGx1c3RyYXRvciAxOS4wLjAsIFNWRyBFeHBvcnQgUGx1Zy1JbiAuIFNWRyBWZXJzaW9uOiA2LjAwIEJ1aWxkIDApICAtLT4NCjxzdmcgdmVyc2lvbj0iMS4xIiBpZD0iTGF5ZXJfMSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB4bWxuczp4bGluaz0iaHR0cDovL3d3dy53My5vcmcvMTk5OS94bGluayIgeD0iMHB4IiB5PSIwcHgiDQoJIHZpZXdCb3g9IjAgMCA5OTEuOCAyMjUuNCIgc3R5bGU9ImVuYWJsZS1iYWNrZ3JvdW5kOm5ldyAwIDAgOTkxLjggMjI1LjQ7IiB4bWw6c3BhY2U9InByZXNlcnZlIj4NCjxzdHlsZSB0eXBlPSJ0ZXh0L2NzcyI+DQoJLnN0MHtmaWxsOiNGRkZGRkY7fQ0KCS5zdDF7ZmlsbDp1cmwoI1hNTElEXzEyXyk7fQ0KCS5zdDJ7ZmlsbDp1cmwoI1hNTElEXzE3Xyk7fQ0KPC9zdHlsZT4NCjxnIGlkPSJYTUxJRF8yMjBfIj4NCgk8cGF0aCBpZD0iWE1MSURfNTlfIiBjbGFzcz0ic3QwIiBkPSJNODExLjQsMTAuM2MtNC43LTQuNy0xMC41LTcuMS0xNy4xLTcuMWgtMjUuNXY0MC4yaDQ5Ljd2LTE2QzgxOC41LDIwLjgsODE2LjEsMTUuMSw4MTEuNCwxMC4zDQoJCXoiLz4NCgk8ZyBpZD0iWE1MSURfNTVfIj4NCgkJPGxpbmVhckdyYWRpZW50IGlkPSJYTUxJRF8xMl8iIGdyYWRpZW50VW5pdHM9InVzZXJTcGFjZU9uVXNlIiB4MT0iMjIuMTc4NyIgeTE9IjY5Ljg2MjYiIHgyPSIxNzIuNzQ4IiB5Mj0iLTE3LjA2ODYiPg0KCQkJPHN0b3AgIG9mZnNldD0iMCIgc3R5bGU9InN0b3AtY29sb3I6I0ZGRkZGRiIvPg0KCQkJPHN0b3AgIG9mZnNldD0iMSIgc3R5bGU9InN0b3AtY29sb3I6I0RDREJEQiIvPg0KCQk8L2xpbmVhckdyYWRpZW50Pg0KCQk8cGF0aCBpZD0iWE1MSURfNThfIiBjbGFzcz0ic3QxIiBkPSJNMTg0LjIsMy4ySDE4NEgzdjI3LjFjMCwxMywxMC41LDIzLjUsMjMuNSwyMy41aDEwMC45aDYuNGg1MC42VjMuMw0KCQkJQzE4NC40LDMuMywxODQuMywzLjIsMTg0LjIsMy4yeiIvPg0KCQk8bGluZWFyR3JhZGllbnQgaWQ9IlhNTElEXzE3XyIgZ3JhZGllbnRVbml0cz0idXNlclNwYWNlT25Vc2UiIHgxPSIxODEuMjcxOSIgeTE9IjE0My40MzU1IiB4Mj0iNjUuMjE0IiB5Mj0iMjU5LjQ5MzQiPg0KCQkJPHN0b3AgIG9mZnNldD0iMCIgc3R5bGU9InN0b3AtY29sb3I6I0ZGRkZGRiIvPg0KCQkJPHN0b3AgIG9mZnNldD0iMSIgc3R5bGU9InN0b3AtY29sb3I6I0RDREJEQiIvPg0KCQk8L2xpbmVhckdyYWRpZW50Pg0KCQk8cGF0aCBpZD0iWE1MSURfNTdfIiBjbGFzcz0ic3QyIiBkPSJNODguNiwxNzYuMmgtNS41SDMyLjV2NTAuNmMwLjEsMCwwLjIsMCwwLjMsMGgwLjJIMjE0di01MC42SDg4LjZ6Ii8+DQoJCTxwYXRoIGlkPSJYTUxJRF81Nl8iIGNsYXNzPSJzdDAiIGQ9Ik0xODUsMy4zYy0wLjIsMC0wLjMtMC4xLTAuNS0wLjFsLTMwLjIsMzAuMmwtMjAuNCwyMC40bC0yLjEsMi4xbC0wLjEtMC4xTDEyLDE3NS43bC0wLjQsMC40DQoJCQlDNi4zLDE4MS41LDMsMTg4LjgsMywxOTdjMCwxNi4yLDEyLjksMjkuMywyOSwyOS44YzAuMiwwLDAuMywwLjEsMC41LDAuMWwzMC4yLTMwLjJsMjAuNC0yMC40bDIuMS0yLjFsMC4xLDAuMUwyMDUsNTQuM2wwLjQtMC40DQoJCQljNS4zLTUuNCw4LjYtMTIuNyw4LjYtMjAuOUMyMTQsMTYuOSwyMDEuMSwzLjgsMTg1LDMuM3oiLz4NCgk8L2c+DQoJPHBhdGggaWQ9IlhNTElEXzU0XyIgY2xhc3M9InN0MCIgZD0iTTM2MC4zLDU5LjVjLTYuMywwLTExLjQsMi4xLTE1LjQsNi4zYy00LDQuMi02LDkuMi02LDE1LjF2Ni4zdjY5LjhjMC0wLjEtMC4xLTAuMS0wLjEtMC4yDQoJCWMtMS4xLDE1LjEtMTMuNywyNy0yOS4xLDI3Yy0xNS40LDAtMjgtMTEuOS0yOS4xLTI3YzAsMC4xLTAuMSwwLjEtMC4xLDAuMnYtNzBWNTkuNWgtNDRsMCw5NC4zdjBjMCwzMS44LDIwLjMsNTguOCw0OC43LDY4LjgNCgkJYzcuNiwyLjcsMTUuOCw0LjIsMjQuMyw0LjJjNDAuMywwLDczLTMyLjcsNzMtNzNWNTkuNUgzNjAuM3oiLz4NCgk8cGF0aCBpZD0iWE1MSURfNTNfIiBjbGFzcz0ic3QwIiBkPSJNODYyLjksMjI2LjhjNi4zLDAsMTEuNC0yLjEsMTUuNC02LjNjNC00LjIsNi05LjIsNi0xNS4xdi02LjN2LTY5LjhjMCwwLjEsMC4xLDAuMSwwLjEsMC4yDQoJCWMxLjEtMTUuMSwxMy43LTI3LDI5LjEtMjdjMTUuNCwwLDI4LDExLjksMjkuMSwyN2MwLTAuMSwwLjEtMC4xLDAuMS0wLjJ2NzB2MjcuNGg0NGwwLTk0LjN2MGMwLTMxLjgtMjAuMy01OC44LTQ4LjctNjguOA0KCQljLTcuNi0yLjctMTUuOC00LjItMjQuMy00LjJjLTQwLjMsMC03MywzMi43LTczLDczdjk0LjRIODYyLjl6Ii8+DQoJPHBhdGggaWQ9IlhNTElEXzUyXyIgY2xhc3M9InN0MCIgZD0iTTgxMS40LDY2LjZjLTQuNy00LjctMTAuNS03LjEtMTcuMS03LjFoLTI1LjV2MzMuOXYyLjh2MTMwLjdoNDkuN1Y5Ni4xdi0yLjh2LTkuNg0KCQlDODE4LjUsNzcuMSw4MTYuMSw3MS4zLDgxMS40LDY2LjZ6Ii8+DQoJPHBhdGggaWQ9IlhNTElEXzUxXyIgY2xhc3M9InN0MCIgZD0iTTUwNy40LDExNy44TDUwNy40LDExNy44bDUuMi01LjVsNDkuMi01Mi44aC02MC40bC00Ni45LDU0LjFWNTkuNWwwLTE0LjNoMHYtMTRjMCwwLDAsMCwwLDANCgkJdi0zLjdjMC02LjYtMi40LTEyLjQtNy4xLTE3LjFjLTQuNy00LjctMTAuNS03LjEtMTcuMS03LjFoLTI1LjV2NC4zdjM1Ljl2MTEzLjV2NjkuOWg0LjRoMzkuNmg1LjZoMHYtNTVMNDY1LDE2MWwzNy41LDY1LjhoNTkuMw0KCQlMNTAxLjYsMTI0TDUwNy40LDExNy44eiIvPg0KCTxwYXRoIGlkPSJYTUxJRF8xXyIgY2xhc3M9InN0MCIgZD0iTTY4OS40LDExNy44TDY4OS40LDExNy44bDUuMi01LjVsNDkuMi01Mi44aC02MC40bC00Ni45LDU0LjFWNTkuNWwwLTE0LjNoMHYtMTRjMCwwLDAsMCwwLDANCgkJdi0zLjdjMC02LjYtMi40LTEyLjQtNy4xLTE3LjFjLTQuNy00LjctMTAuNS03LjEtMTcuMS03LjFoLTI1LjV2NC4zdjM1Ljl2MTEzLjV2NjkuOWg0LjRoMzkuNmg1LjZoMHYtNTVMNjQ3LDE2MWwzNy41LDY1LjhoNTkuMw0KCQlMNjgzLjcsMTI0TDY4OS40LDExNy44eiIvPg0KPC9nPg0KPC9zdmc+DQo=" alt="Zukkin">
   <div class="sysname">Gestão de MEIs<small>Inteligência de Mercado · Projeto IA</small></div>
   <div class="spacer"></div>
+  <button class="sync-btn" id="syncBtn" title="Sincronizar dados do Google Sheets"><span class="sync-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 2v6h-6M3 12a9 9 0 0 1 15-6.7L21 8M3 22v-6h6M21 12a9 9 0 0 1-15 6.7L3 16"/></svg></span>Sincronizar</button>
   <div class="savestate" id="saveState"><span class="d"></span><span id="saveTxt">Salvo</span></div>
 </header>
 
@@ -2225,6 +2232,182 @@ function init(){
   document.addEventListener('mousedown',e=>{ var p=document.getElementById('acompPop'); if(p&&p.classList.contains('show') && !p.contains(e.target) && !e.target.closest('.acompBtn')) closeAcompPop(); });
   setSave('saved');
 }
+/* ============================================================
+   Google Sheets Sync — read-only integration
+   ============================================================ */
+const SHEETS_CFG = {
+  vagas: {
+    id: '1_rE_J2_LWmRtGpDHo4bKsnnT2pZLGTNXZh1bSr31s2E',
+    tab: 'Vagas'
+  },
+  financeiro: {
+    id: '1PYnw84PHMuqlj6A3zqQLBOMLSeXy_22FsaD8VCKjfrE',
+    tabs: ['Jan/2026','Fev/2026','Mar/2026','Abr/2026','Mai/2026','Jun/2026','Jul/2026','Ago/2026']
+  }
+};
+// Map sheet tab "Jan/2026" → app key "Jan2026"
+function sheetTabToKey(tab){ return tab.replace('/',''); }
+
+const VAGAS_EXCL_STATUS = ['preenchida','cancelada','fechada','vaga preenchida','vaga encerrada'];
+
+async function fetchSheet(spreadsheetId, sheetName){
+  const url = 'https://docs.google.com/spreadsheets/d/'+spreadsheetId+'/gviz/tq?tqx=out:json&sheet='+encodeURIComponent(sheetName);
+  const resp = await fetch(url);
+  if(!resp.ok) throw new Error('Erro ao buscar planilha: '+resp.status);
+  let txt = await resp.text();
+  // strip JSONP wrapper: google.visualization.Query.setResponse({...})
+  const start = txt.indexOf('{'); const end = txt.lastIndexOf('}');
+  if(start===-1||end===-1) throw new Error('Resposta inválida da planilha');
+  const data = JSON.parse(txt.substring(start, end+1));
+  if(!data.table) throw new Error('Sem dados na aba: '+sheetName);
+  // extract headers from first row
+  const cols = data.table.cols.map(c=>(c.label||'').trim());
+  const rows = (data.table.rows||[]).map(r=>{
+    const obj={};
+    (r.c||[]).forEach((cell,i)=>{
+      if(i<cols.length && cols[i]) obj[cols[i]] = cell? (cell.v!=null? cell.v : (cell.f||'')) : '';
+    });
+    return obj;
+  });
+  return rows;
+}
+
+function colVal(row, names){
+  // try multiple possible column names, return first match
+  if(!Array.isArray(names)) names=[names];
+  for(const n of names){ if(row[n]!=null && row[n]!=='') return row[n]; }
+  return '';
+}
+function colNum(row, names){ const v=colVal(row,names); return typeof v==='number'? v : parseFloat(String(v).replace(',','.'))||0; }
+function colStr(row, names){ return String(colVal(row,names)||'').trim(); }
+
+function mapVagaRow(row){
+  const status = colStr(row,['STATUS','Status']);
+  // filter out closed statuses
+  if(VAGAS_EXCL_STATUS.includes(status.toLowerCase())) return null;
+  // Map sheet status to app status
+  let appStatus = status;
+  const statusMap = {
+    'em recrutamento':'Em recrutamento','candidato enviado':'Candidato enviado',
+    'vaga reaberta':'Vaga Reaberta','stand by':'Stand by',
+    'vaga preenchida':'Vaga preenchida','vaga encerrada':'Vaga encerrada'
+  };
+  if(statusMap[status.toLowerCase()]) appStatus = statusMap[status.toLowerCase()];
+
+  // Build acomp object from ENTR./TESTE/STAND columns
+  const acomp = {};
+  const acompCols = ['ENTR.','TESTE','STAND'];
+  acompCols.forEach(col=>{
+    const v = colStr(row,[col]);
+    if(v) acomp[col] = v;
+  });
+
+  return {
+    prioridade: colStr(row,['PRIORIDADE','Prioridade']),
+    respOp: colStr(row,['RESPONSÁVEL OP','RESPONSAVEL OP','Responsável OP']),
+    respRs: colStr(row,['RESPONSÁVEL RS','RESPONSAVEL RS','Responsável RS','RESPONSÁVEL R&S']),
+    nomeVaga: colStr(row,['NOME DA VAGA','Nome da Vaga','Nome da vaga']),
+    cidade: colStr(row,['NOME DA VAGA','Nome da Vaga','Nome da vaga','CIDADE','Cidade']),
+    uf: colStr(row,['UF','Uf']),
+    cliente: colStr(row,['CLIENTE','Cliente']),
+    motivo: colStr(row,['MOTIVO','Motivo']),
+    quemSubstituira: colStr(row,['QUEM SUBSTITUIRÁ','QUEM SUBSTITUIRA','Quem Substituirá']),
+    regime: colStr(row,['REGIME ATUAL','Regime Atual','Regime atual']),
+    cargaHoraria: colStr(row,['CARGA HORARIA','CARGA HORÁRIA','Carga Horária','Carga Horaria']),
+    status: appStatus,
+    plat: colStr(row,['PLAT','Plat']),
+    aprovado: colStr(row,['APROVADO','Aprovado']),
+    acomp: acomp,
+    rsDia: colNum(row,['R$/DIA','R$/Dia','R$ DIA']),
+    diasMes: colStr(row,['DIAS/MÊS','DIAS/MES','Dias/Mês','Dias/Mes']),
+    rsMes: colNum(row,['R$/MÊS','R$/MES','R$/Mês','R$ MÊS']),
+    itens: colStr(row,['ITENS POR DIA ou LOJA','ITENS POR DIA OU LOJA','Itens por dia ou loja','ITENS']),
+    rota: colStr(row,['ROTA','Rota']),
+    locomocao: colStr(row,['LOCOMOÇÃO','LOCOMOCAO','Locomoção']),
+    aberturaOp: colStr(row,['ABERTURA OP','Abertura OP','Abertura Op']),
+    aberturaRs: colStr(row,['ABERTURA R&S','ABERTURA RS','Abertura R&S']),
+    fechamento: colStr(row,['FECHAMENTO','Fechamento']),
+    andamento: colStr(row,['ANDAMENTO - REUNIÃO SEMANAL','ANDAMENTO','Andamento']),
+    notas: colStr(row,['Notas','NOTAS','notas'])
+  };
+}
+
+function mapFinanceiroRow(row){
+  return {
+    id: colStr(row,['ID','Id','id']),
+    nome: colStr(row,['Nome','NOME','nome']),
+    cidade: colStr(row,['Cidade','CIDADE','cidade']),
+    responsavel: colStr(row,['Responsável','RESPONSÁVEL','Responsáveis','RESPONSÁVEIS','responsavel','Responsavel']),
+    cliente: colStr(row,['Cliente','CLIENTE','cliente']),
+    inicio: colStr(row,['Início','INÍCIO','Inicio','INICIO','início','inicio']),
+    diaria: colNum(row,['Diária','DIÁRIA','Diaria','DIARIA','diária','diaria']),
+    dias: colNum(row,['Dias','DIAS','dias']),
+    diaria1: colNum(row,['DIÁRIA 1','Diária 1','DIARIA 1','Diaria 1']),
+    diaria2: colNum(row,['DIÁRIA 2','Diária 2','DIARIA 2','Diaria 2']),
+    impressao: colNum(row,['IMPRESSÃO','Impressão','IMPRESSAO','Impressao','impressão']),
+    epi: colNum(row,['EPI','Epi','epi']),
+    das: colNum(row,['DAS','Das','das']),
+    oculto: colNum(row,['OCULTO','Oculto','oculto']),
+    diasTrabalhados: colNum(row,['Dias trabalhados','DIAS TRABALHADOS','Dias Trabalhados','diasTrabalhados']),
+    antecipacao: colNum(row,['Antecipação','ANTECIPAÇÃO','Antecipacao','ANTECIPACAO','antecipação']),
+    qtdFaltas: colNum(row,['Quatd de Faltas','QUATD DE FALTAS','Qtd de Faltas','Qtd Faltas','qtdFaltas','Quantidade de Faltas'])
+  };
+}
+
+let _syncing = false;
+async function syncFromSheets(){
+  if(_syncing) return;
+  _syncing = true;
+  const btn = document.getElementById('syncBtn');
+  if(btn){ btn.disabled=true; btn.classList.add('syncing'); btn.querySelector('span:last-child').textContent='Sincronizando...'; }
+  setSave('saving');
+  try {
+    // 1) Sync vagas (R&S)
+    const vagasRows = await fetchSheet(SHEETS_CFG.vagas.id, SHEETS_CFG.vagas.tab);
+    const mappedVagas = vagasRows.map(mapVagaRow).filter(Boolean);
+    // Add _id to each
+    stamp(mappedVagas);
+    state.vagasRec = mappedVagas;
+
+    // 2) Sync financeiro (all month tabs)
+    for(const tab of SHEETS_CFG.financeiro.tabs){
+      try {
+        const finRows = await fetchSheet(SHEETS_CFG.financeiro.id, tab);
+        const key = sheetTabToKey(tab);
+        const mapped = finRows.filter(r=>colStr(r,['Nome','NOME','nome'])).map(mapFinanceiroRow);
+        stamp(mapped);
+        state.mesesPagamento[key] = mapped;
+      } catch(e){
+        console.warn('Sync financeiro tab "'+tab+'" falhou:', e.message);
+      }
+    }
+    // Make sure mesAtual is valid
+    if(!state.mesesPagamento[state.mesAtual]){
+      const keys = Object.keys(state.mesesPagamento);
+      if(keys.length) state.mesAtual = keys[keys.length-1];
+    }
+
+    save();
+    // Re-render everything
+    renderPag();
+    renderRec();
+    renderDash();
+    updateCounts();
+    try{ renderSla(); }catch(e){}
+    setSave('saved');
+    if(btn){ btn.querySelector('span:last-child').textContent='Sincronizado ✓'; setTimeout(()=>{ btn.querySelector('span:last-child').textContent='Sincronizar'; },3000); }
+  } catch(e){
+    console.error('Sync error:', e);
+    setSave('error');
+    if(btn){ btn.querySelector('span:last-child').textContent='Erro na sync'; setTimeout(()=>{ btn.querySelector('span:last-child').textContent='Sincronizar'; },3000); }
+  } finally {
+    _syncing = false;
+    if(btn){ btn.disabled=false; btn.classList.remove('syncing'); }
+  }
+}
+// Wire up sync button
+document.getElementById('syncBtn').addEventListener('click', syncFromSheets);
+
 init();
 </script>
 </body>
