@@ -2243,6 +2243,10 @@ const SHEETS_CFG = {
   financeiro: {
     id: '1PYnw84PHMuqlj6A3zqQLBOMLSeXy_22FsaD8VCKjfrE',
     tabs: ['Jan/2026','Fev/2026','Mar/2026','Abr/2026','Mai/2026','Jun/2026','Jul/2026','Ago/2026']
+  },
+  sla: {
+    id: '1BvVTBMcJOgKAoTRdeNaO5DALjlLZtp6t0uRbm3AQIfQ',
+    tabs: ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez']
   }
 };
 // Map sheet tab "Jan/2026" → app key "Jan2026"
@@ -2354,6 +2358,22 @@ function mapFinanceiroRow(row){
   };
 }
 
+function mapSlaRow(row){
+  const resp = colStr(row,['Responsável','RESPONSÁVEL','Responsavel','RESPONSAVEL']);
+  const local = colStr(row,['Local da vaga','LOCAL DA VAGA','Local da Vaga']);
+  if(!resp && !local) return null;
+  return {
+    responsavel: resp,
+    local: local,
+    num: colStr(row,['N°','Nº','N','NUM','Num']),
+    estado: colStr(row,['Estado','ESTADO','estado']),
+    abertura: colStr(row,['Data de Abertura','DATA DE ABERTURA','Data de abertura']),
+    reabertura: colStr(row,['Data de Reabertura','DATA DE REABERTURA','Data de reabertura']),
+    fechamento: colStr(row,['Data Fechamento','DATA FECHAMENTO','Data fechamento','Data de Fechamento']),
+    status: colStr(row,['Status','STATUS','status'])
+  };
+}
+
 let _syncing = false;
 async function syncFromSheets(){
   if(_syncing) return;
@@ -2385,6 +2405,22 @@ async function syncFromSheets(){
     if(!state.mesesPagamento[state.mesAtual]){
       const keys = Object.keys(state.mesesPagamento);
       if(keys.length) state.mesAtual = keys[keys.length-1];
+    }
+
+    // 3) Sync SLA das Vagas (all month tabs)
+    const allSla = [];
+    for(const tab of SHEETS_CFG.sla.tabs){
+      try {
+        const slaRows = await fetchSheet(SHEETS_CFG.sla.id, tab);
+        const mapped = slaRows.map(mapSlaRow).filter(Boolean);
+        allSla.push(...mapped);
+      } catch(e){
+        console.warn('Sync SLA tab "'+tab+'" falhou:', e.message);
+      }
+    }
+    if(allSla.length){
+      stamp(allSla);
+      state.slaVagas = allSla;
     }
 
     save();
