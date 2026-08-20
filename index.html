@@ -2232,9 +2232,42 @@ function candRenderSummary(){
   var pt=document.getElementById('candByPlat');
   if(pt) pt.innerHTML='<tr><th>Plataforma</th><th class="r">Candidatos</th><th class="r">Aprovados</th><th class="r">Contratados</th></tr>'+(pArr.length?pArr.map(function(p){ var o=byP[p]; return '<tr><td>'+esc(p)+'</td><td class="r">'+o.tot+'</td><td class="r">'+o.apr+'</td><td class="r">'+o.ctr+'</td></tr>'; }).join(''):'<tr><td class="foot" colspan="4">Sem dados</td></tr>');
 }
+var CAND_PASTEL_PLAT=[
+  {bg:'#dbeafe',txt:'#1e40af'},{bg:'#fce7f3',txt:'#9d174d'},{bg:'#d1fae5',txt:'#065f46'},
+  {bg:'#fef3c7',txt:'#92400e'},{bg:'#ede9fe',txt:'#5b21b6'},{bg:'#ffedd5',txt:'#9a3412'},
+  {bg:'#cffafe',txt:'#155e75'},{bg:'#fecdd3',txt:'#9f1239'},{bg:'#e0e7ff',txt:'#3730a3'},
+  {bg:'#d5f5f6',txt:'#0e7490'},{bg:'#fde68a',txt:'#78350f'},{bg:'#c7d2fe',txt:'#4338ca'}
+];
+var CAND_PASTEL_RECR=[
+  {bg:'#dce7f0',txt:'#02385A'},{bg:'#fae8ff',txt:'#86198f'},{bg:'#dcfce7',txt:'#166534'},
+  {bg:'#fff7ed',txt:'#c2410c'},{bg:'#f0fdf4',txt:'#15803d'},{bg:'#fdf2f8',txt:'#be185d'},
+  {bg:'#ecfdf5',txt:'#047857'},{bg:'#eff6ff',txt:'#1d4ed8'},{bg:'#fefce8',txt:'#a16207'},
+  {bg:'#f5f3ff',txt:'#6d28d9'},{bg:'#fff1f2',txt:'#be123c'},{bg:'#f0fdfa',txt:'#0f766e'}
+];
+var _candPlatMap={}, _candRecrMap={}, _candPlatIdx=0, _candRecrIdx=0;
+function candPlatColor(p){ var k=(p||'').trim().toLowerCase(); if(!k) return null; if(!_candPlatMap[k]){ _candPlatMap[k]=CAND_PASTEL_PLAT[_candPlatIdx % CAND_PASTEL_PLAT.length]; _candPlatIdx++; } return _candPlatMap[k]; }
+function candRecrColor(r){ var k=(r||'').trim().toLowerCase(); if(!k) return null; if(!_candRecrMap[k]){ _candRecrMap[k]=CAND_PASTEL_RECR[_candRecrIdx % CAND_PASTEL_RECR.length]; _candRecrIdx++; } return _candRecrMap[k]; }
+function candCellHtml(col, val){
+  var v=esc(val);
+  if(!val || !val.trim()) return '<td>'+v+'</td>';
+  var lo=val.trim().toLowerCase();
+  if(col.k==='entrevistaRealizada'||col.k==='aprovado'||col.k==='realizouTeste'||col.k==='standBySim'||col.k==='contratado'){
+    if(lo==='sim'||lo==='s'||lo==='yes') return '<td><span style="display:inline-block;padding:2px 10px;border-radius:8px;font-size:11px;font-weight:600;background:#d1fae5;color:#065f46">'+v+'</span></td>';
+    if(lo==='não'||lo==='nao'||lo==='no'||lo==='n') return '<td><span style="display:inline-block;padding:2px 10px;border-radius:8px;font-size:11px;font-weight:600;background:#fecdd3;color:#9f1239">'+v+'</span></td>';
+  }
+  if(col.k==='plataforma'){ var pc=candPlatColor(val); if(pc) return '<td><span style="display:inline-block;padding:2px 10px;border-radius:8px;font-size:11px;font-weight:600;background:'+pc.bg+';color:'+pc.txt+'">'+v+'</span></td>'; }
+  if(col.k==='recrutador'){ var rc=candRecrColor(val); if(rc) return '<td><span style="display:inline-block;padding:2px 10px;border-radius:8px;font-size:11px;font-weight:600;background:'+rc.bg+';color:'+rc.txt+'">'+v+'</span></td>'; }
+  if(col.k==='_status'){
+    var sc={Contratado:{bg:'#d1fae5',txt:'#065f46'},Aprovado:{bg:'#dbeafe',txt:'#1e40af'},'Desistência':{bg:'#fecdd3',txt:'#9f1239'},'Stand-by':{bg:'#fef3c7',txt:'#92400e'},Reprovado:{bg:'#fecdd3',txt:'#9f1239'},'Em processo':{bg:'#e0e7ff',txt:'#3730a3'}};
+    var stc=sc[val]||{bg:'#f1f5f9',txt:'#475569'};
+    return '<td><span style="display:inline-block;padding:2px 10px;border-radius:8px;font-size:11px;font-weight:600;background:'+stc.bg+';color:'+stc.txt+'">'+v+'</span></td>';
+  }
+  return '<td>'+v+'</td>';
+}
 function candRenderTable(){
   var t=document.getElementById('candTable'); if(!t) return;
   var rows=candFiltered();
+  _candPlatMap={}; _candRecrMap={}; _candPlatIdx=0; _candRecrIdx=0;
   var cols=[
     {k:'recrutador',label:'Recrutador',w:130},
     {k:'plataforma',label:'Plataforma Utilizada',w:150},
@@ -2266,7 +2299,7 @@ function candRenderTable(){
     html+='<tr>';
     cols.forEach(function(col){
       var val=(col.k==='_status')?st:(c[col.k]||'');
-      html+='<td>'+esc(val)+'</td>';
+      html+=candCellHtml(col,val);
     });
     html+='</tr>';
   });
