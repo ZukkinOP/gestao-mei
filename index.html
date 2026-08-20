@@ -2237,24 +2237,24 @@ function candRenderTable(){
   var rows=candFiltered();
   var cols=[
     {k:'recrutador',label:'Recrutador',w:130},
-    {k:'plataforma',label:'Plataforma',w:120},
+    {k:'plataforma',label:'Plataforma Utilizada',w:150},
     {k:'standby',label:'Stand-by',w:100},
-    {k:'standBySim',label:'Stand By?',w:80},
-    {k:'nome',label:'Candidato',w:180},
-    {k:'contato',label:'Contato',w:130},
-    {k:'horario',label:'Horário Agendado',w:120},
-    {k:'cidade',label:'Cidade',w:140},
-    {k:'dataEntrevista',label:'Data Entrevista',w:110},
-    {k:'entrevistaRealizada',label:'Entrevista Realizada?',w:110},
-    {k:'aprovado',label:'Aprovado/R&S',w:100},
-    {k:'dataTeste',label:'Data Teste Prático',w:110},
-    {k:'desistencia',label:'Desistências',w:110},
-    {k:'realizouTeste',label:'Realizou Teste?',w:100},
-    {k:'contratado',label:'Contratado',w:100},
-    {k:'tipoContratacao',label:'Tipo Contratação',w:120},
-    {k:'desistenciaContratacao',label:'Desist. Contratação',w:130},
-    {k:'observacao',label:'Observação',w:150},
-    {k:'_status',label:'Status',w:100}
+    {k:'standBySim',label:'Stand By?',w:90},
+    {k:'nome',label:'Nome do Candidato',w:200},
+    {k:'contato',label:'Contato',w:140},
+    {k:'horario',label:'Horário Agendado',w:145},
+    {k:'cidade',label:'Cidade do Candidato',w:160},
+    {k:'dataEntrevista',label:'Data da Entrevista',w:140},
+    {k:'entrevistaRealizada',label:'Entrevista Realizada?',w:160},
+    {k:'aprovado',label:'Aprovado/R&S',w:120},
+    {k:'dataTeste',label:'Data do Teste Prático',w:160},
+    {k:'desistencia',label:'Desistências',w:120},
+    {k:'realizouTeste',label:'Realizou o Teste?',w:140},
+    {k:'contratado',label:'Contratado',w:110},
+    {k:'tipoContratacao',label:'Tipo de Contratação',w:155},
+    {k:'desistenciaContratacao',label:'Desistência Contratação',w:175},
+    {k:'observacao',label:'Observação',w:160},
+    {k:'_status',label:'Status',w:110}
   ];
   var html='<colgroup>'+cols.map(function(c){return '<col style="width:'+c.w+'px">';}).join('')+'</colgroup>';
   html+='<thead><tr class="cols">';
