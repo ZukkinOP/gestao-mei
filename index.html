@@ -2236,17 +2236,25 @@ function candRenderTable(){
   var t=document.getElementById('candTable'); if(!t) return;
   var rows=candFiltered();
   var cols=[
-    {k:'recrutador',label:'Recrutador',w:140},
-    {k:'plataforma',label:'Plataforma',w:130},
+    {k:'recrutador',label:'Recrutador',w:130},
+    {k:'plataforma',label:'Plataforma',w:120},
+    {k:'standby',label:'Stand-by',w:100},
+    {k:'standBySim',label:'Stand By?',w:80},
     {k:'nome',label:'Candidato',w:180},
+    {k:'contato',label:'Contato',w:130},
+    {k:'horario',label:'Horário Agendado',w:120},
     {k:'cidade',label:'Cidade',w:140},
-    {k:'dataEntrevista',label:'Data Entrevista',w:120},
-    {k:'entrevistaRealizada',label:'Entrevista?',w:90},
-    {k:'aprovado',label:'Aprovado',w:90},
-    {k:'dataTeste',label:'Data Teste',w:110},
-    {k:'realizouTeste',label:'Teste?',w:80},
+    {k:'dataEntrevista',label:'Data Entrevista',w:110},
+    {k:'entrevistaRealizada',label:'Entrevista Realizada?',w:110},
+    {k:'aprovado',label:'Aprovado/R&S',w:100},
+    {k:'dataTeste',label:'Data Teste Prático',w:110},
+    {k:'desistencia',label:'Desistências',w:110},
+    {k:'realizouTeste',label:'Realizou Teste?',w:100},
     {k:'contratado',label:'Contratado',w:100},
-    {k:'_status',label:'Status',w:110}
+    {k:'tipoContratacao',label:'Tipo Contratação',w:120},
+    {k:'desistenciaContratacao',label:'Desist. Contratação',w:130},
+    {k:'observacao',label:'Observação',w:150},
+    {k:'_status',label:'Status',w:100}
   ];
   var html='<colgroup>'+cols.map(function(c){return '<col style="width:'+c.w+'px">';}).join('')+'</colgroup>';
   html+='<thead><tr class="cols">';
