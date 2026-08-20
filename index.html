@@ -335,6 +335,7 @@ kbd{background:#f1f3f7;border:1px solid var(--line);border-radius:5px;padding:1p
   <button data-view="rec" data-menu="rs">Recrutamento <span class="cnt" id="cntRec">0</span></button>
   <button data-view="rot" data-menu="rs">Rotatividade</button>
   <button data-view="sla" data-menu="rs">SLA das Vagas</button>
+  <button data-view="cand" data-menu="rs">Candidatos <span class="cnt" id="cntCand">0</span></button>
   <button id="btnHelp" class="helpbtn">❔ Como usar</button>
 </nav>
 
@@ -514,6 +515,23 @@ kbd{background:#f1f3f7;border:1px solid var(--line);border-radius:5px;padding:1p
     <div class="tablewrap"><table id="slaTable"></table></div>
     <div class="foot-note"><b>SLA</b> = dias entre a <b>Data de Reabertura</b> e o <b>Fechamento</b> (vagas Preenchidas) ou entre a Reabertura e hoje (Em recrutamento). Os resumos separam automaticamente <b>vagas fáceis</b> e <b>vagas difíceis</b> — a classificação é baseada no histórico de SLA de cada cidade (cidades com SLA acima da mediana geral = difícil). Assim, cidades complicadas não distorcem o SLA das demais. Use <b>Importar planilha SLA</b> para atualizar os dados.</div>
     </div>
+  </section>
+<!-- CANDIDATOS -->
+  <section class="view" id="view-cand">
+    <div class="dashbar">
+      <span class="db-label">Pipeline de Candidatos</span>
+      <select id="candMesInp"></select>
+      <div class="search" style="margin-left:8px"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4-4"/></svg><input id="candSearch" placeholder="Buscar candidato, cidade, recrutador..."></div>
+      <select id="candStatus"><option value="">Todos status</option><option value="Aprovado">Aprovado</option><option value="Reprovado">Reprovado</option><option value="Contratado">Contratado</option><option value="Desistência">Desistência</option><option value="Stand-by">Stand-by</option><option value="Em processo">Em processo</option></select>
+      <select id="candRecr"><option value="">Todos recrutadores</option></select>
+    </div>
+    <div class="cards" id="candCards"></div>
+    <div class="dash-grid">
+      <div class="panel"><h3>Por Recrutador</h3><table class="mini-tbl" id="candByRecr"></table></div>
+      <div class="panel"><h3>Por Plataforma</h3><table class="mini-tbl" id="candByPlat"></table></div>
+    </div>
+    <div class="tablewrap"><table id="candTable"></table></div>
+    <span class="count-info" id="candInfo"></span>
   </section>
 <!-- COMPARATIVO DE GASTOS -->
   <section class="view" id="view-comp">
@@ -764,12 +782,13 @@ function migrate(s){
     if(!Array.isArray(s.recAddOp)) s.recAddOp=[]; if(!Array.isArray(s.recAddRs)) s.recAddRs=[];
     if(s.slaVer!==SLA_VER || !Array.isArray(s.slaVagas)){ s.slaVagas=stamp(slaSeed()); s.slaVer=SLA_VER; if(!s.slaMes) s.slaMes='Agosto'; } else { stamp(s.slaVagas); }
     if(!s.slaMeses) s.slaMeses={}; if(!s.slaMesTab) s.slaMesTab='';
+    if(!s.candMeses) s.candMeses={}; if(!s.candMesTab) s.candMesTab='';
     if(!s.mesAtual || !s.mesesPagamento[s.mesAtual]) s.mesAtual=Object.keys(s.mesesPagamento)[0]||'Jul2026';
     if(!Object.keys(s.mesesPagamento).length){ s.mesesPagamento['Jul2026']=[]; s.mesAtual='Jul2026'; }
     return s;
   }
   const mes=(s&&s.mesRef)||'Jul2026';
-  return { mesAtual:mes, mesesPagamento:{[mes]:stamp((s&&s.pagamentos)||[])}, vagas:stamp((s&&s.vagas)||[]), distratos:stamp((s&&s.distratos)||[]), vagasRec:stamp(recSeed()), recVer:REC_VER, recAddOp:[], recAddRs:[], slaVagas:stamp(slaSeed()), slaVer:SLA_VER, slaMes:'Agosto' };
+  return { mesAtual:mes, mesesPagamento:{[mes]:stamp((s&&s.pagamentos)||[])}, vagas:stamp((s&&s.vagas)||[]), distratos:stamp((s&&s.distratos)||[]), vagasRec:stamp(recSeed()), recVer:REC_VER, recAddOp:[], recAddRs:[], slaVagas:stamp(slaSeed()), slaVer:SLA_VER, slaMes:'Agosto', candMeses:{}, candMesTab:'' };
 }
 function seedState(){
   const mes=SEED.mesRef||'Jul2026';
@@ -779,7 +798,7 @@ function seedState(){
   } else {
     mp[mes]=stamp(JSON.parse(JSON.stringify(SEED.pagamentos||[])));
   }
-  return { mesAtual:mes, mesesPagamento:mp, vagas:stamp(JSON.parse(JSON.stringify(SEED.vagas))), distratos:stamp(JSON.parse(JSON.stringify(SEED.distratos))), vagasRec:stamp(recSeed()), recVer:REC_VER, recAddOp:[], recAddRs:[], slaVagas:stamp(slaSeed()), slaVer:SLA_VER, slaMes:'Agosto' };
+  return { mesAtual:mes, mesesPagamento:mp, vagas:stamp(JSON.parse(JSON.stringify(SEED.vagas))), distratos:stamp(JSON.parse(JSON.stringify(SEED.distratos))), vagasRec:stamp(recSeed()), recVer:REC_VER, recAddOp:[], recAddRs:[], slaVagas:stamp(slaSeed()), slaVer:SLA_VER, slaMes:'Agosto', candMeses:{}, candMesTab:'' };
 }
 function load(){
   try{ const raw=localStorage.getItem(LS_KEY); if(raw) return migrate(JSON.parse(raw)); }catch(e){}
@@ -1317,6 +1336,7 @@ function updateCounts(){
   document.getElementById('cntVagas').textContent=state.vagas.length;
   document.getElementById('cntDist').textContent=state.distratos.length;
   var _cr=document.getElementById('cntRec'); if(_cr) _cr.textContent=(state.vagasRec||[]).length;
+  var _cc=document.getElementById('cntCand'); if(_cc) _cc.textContent=candCurrentVagas().length;
 }
 let currentView='dash';
 var currentMenu='fin';
@@ -1341,6 +1361,7 @@ function switchView(v){
   if(v==='rec') renderRec();
   if(v==='rot') renderRot();
   if(v==='sla') renderSla();
+  if(v==='cand') renderCand();
 }
 function fillFilterOptions(){
   const rp=document.getElementById('pagResp'); rp.length=1;
@@ -2111,6 +2132,147 @@ function importSlaSheet(file){
   };
   fr.readAsArrayBuffer(file);
 }
+/* ============================================================
+   CANDIDATOS — Pipeline de Candidatos
+   ============================================================ */
+function candCurrentVagas(){
+  var sel=document.getElementById('candMesInp');
+  var key=(sel&&sel.value)||state.candMesTab||'';
+  if(key && state.candMeses && state.candMeses[key]) return state.candMeses[key];
+  if(state.candMeses){
+    var keys=Object.keys(state.candMeses);
+    if(keys.length) return state.candMeses[keys[keys.length-1]];
+  }
+  return [];
+}
+function candPopulateMonths(){
+  var sel=document.getElementById('candMesInp'); if(!sel) return;
+  var cur=sel.value||(state.candMesTab||'');
+  var html='';
+  if(state.candMeses){
+    var tabs=Object.keys(state.candMeses);
+    tabs.forEach(function(t){
+      var lbl=SLA_TAB_LABEL[t]||t;
+      html+='<option value="'+t+'">'+lbl+'</option>';
+    });
+  }
+  sel.innerHTML=html;
+  if(cur){ sel.value=cur; }
+  if(!sel.value){
+    var opts=sel.options;
+    if(opts.length) sel.value=opts[opts.length-1].value;
+  }
+  if(sel.value){ state.candMesTab=sel.value; }
+}
+function candDeriveStatus(c){
+  if(c.contratado && c.contratado.trim()) return 'Contratado';
+  if((c.desistencia && c.desistencia.trim()) || (c.desistenciaContratacao && c.desistenciaContratacao.trim())) return 'Desistência';
+  if(c.standBySim && c.standBySim.trim().toLowerCase()==='sim') return 'Stand-by';
+  if(c.aprovado && c.aprovado.trim().toLowerCase().indexOf('sim')>=0) return 'Aprovado';
+  if(c.entrevistaRealizada && c.entrevistaRealizada.trim().toLowerCase()==='sim' && !(c.aprovado && c.aprovado.trim().toLowerCase().indexOf('sim')>=0)) return 'Reprovado';
+  return 'Em processo';
+}
+function candFiltered(){
+  var q=(document.getElementById('candSearch').value||'').toLowerCase().trim();
+  var s=document.getElementById('candStatus').value;
+  var r=document.getElementById('candRecr').value;
+  var base=candCurrentVagas();
+  return base.filter(function(c){
+    if(s && candDeriveStatus(c)!==s) return false;
+    if(r && (c.recrutador||'')!==r) return false;
+    if(q){ var hay=((c.nome||'')+' '+(c.cidade||'')+' '+(c.recrutador||'')).toLowerCase(); if(hay.indexOf(q)<0) return false; }
+    return true;
+  });
+}
+function candRenderCards(){
+  var all=candCurrentVagas();
+  var entrevistas=all.filter(function(c){ return c.entrevistaRealizada && c.entrevistaRealizada.trim().toLowerCase()==='sim'; }).length;
+  var aprovados=all.filter(function(c){ return c.aprovado && c.aprovado.trim().toLowerCase().indexOf('sim')>=0; }).length;
+  var contratados=all.filter(function(c){ return c.contratado && c.contratado.trim(); }).length;
+  var desist=all.filter(function(c){ return (c.desistencia && c.desistencia.trim()) || (c.desistenciaContratacao && c.desistenciaContratacao.trim()); }).length;
+  var cards=[
+    {lbl:'Entrevistas',val:entrevistas+' / '+all.length,foot:'realizadas / agendadas',ic:'&#128197;'},
+    {lbl:'Aprovados',val:aprovados,foot:'aprovados R&S',ic:'&#9989;'},
+    {lbl:'Contratados',val:contratados,foot:'contratações efetivadas',ic:'&#127881;'},
+    {lbl:'Desistências',val:desist,foot:'desistências totais',ic:'&#9888;'}
+  ];
+  var ce=document.getElementById('candCards'); if(ce) ce.innerHTML=cards.map(function(c){return '<div class="card"><div class="lbl"><span class="ic">'+c.ic+'</span>'+c.lbl+'</div><div class="val">'+c.val+'</div><div class="foot">'+c.foot+'</div></div>';}).join('');
+}
+function candRenderSummary(){
+  var all=candCurrentVagas();
+  // By Recrutador
+  var byR={};
+  all.forEach(function(c){
+    var who=((c.recrutador||'').trim())||'(sem)';
+    if(!byR[who]) byR[who]={ent:0,apr:0,ctr:0,des:0};
+    if(c.entrevistaRealizada && c.entrevistaRealizada.trim().toLowerCase()==='sim') byR[who].ent++;
+    if(c.aprovado && c.aprovado.trim().toLowerCase().indexOf('sim')>=0) byR[who].apr++;
+    if(c.contratado && c.contratado.trim()) byR[who].ctr++;
+    if((c.desistencia && c.desistencia.trim())||(c.desistenciaContratacao && c.desistenciaContratacao.trim())) byR[who].des++;
+  });
+  var rArr=Object.keys(byR).sort();
+  var rt=document.getElementById('candByRecr');
+  if(rt) rt.innerHTML='<tr><th>Recrutador</th><th class="r">Entrevistas</th><th class="r">Aprovados</th><th class="r">Contratados</th><th class="r">Desistências</th></tr>'+(rArr.length?rArr.map(function(w){ var o=byR[w]; return '<tr><td>'+esc(w)+'</td><td class="r">'+o.ent+'</td><td class="r">'+o.apr+'</td><td class="r">'+o.ctr+'</td><td class="r">'+o.des+'</td></tr>'; }).join(''):'<tr><td class="foot" colspan="5">Sem dados</td></tr>');
+  // Populate recrutador filter
+  var rf=document.getElementById('candRecr'); if(rf){
+    var curR=rf.value; rf.length=1;
+    rArr.forEach(function(w){ var o=document.createElement('option'); o.value=w; o.textContent=w; rf.appendChild(o); });
+    if(curR) rf.value=curR;
+  }
+  // By Plataforma
+  var byP={};
+  all.forEach(function(c){
+    var p=((c.plataforma||'').trim())||'(sem)';
+    if(!byP[p]) byP[p]={tot:0,apr:0,ctr:0};
+    byP[p].tot++;
+    if(c.aprovado && c.aprovado.trim().toLowerCase().indexOf('sim')>=0) byP[p].apr++;
+    if(c.contratado && c.contratado.trim()) byP[p].ctr++;
+  });
+  var pArr=Object.keys(byP).sort();
+  var pt=document.getElementById('candByPlat');
+  if(pt) pt.innerHTML='<tr><th>Plataforma</th><th class="r">Candidatos</th><th class="r">Aprovados</th><th class="r">Contratados</th></tr>'+(pArr.length?pArr.map(function(p){ var o=byP[p]; return '<tr><td>'+esc(p)+'</td><td class="r">'+o.tot+'</td><td class="r">'+o.apr+'</td><td class="r">'+o.ctr+'</td></tr>'; }).join(''):'<tr><td class="foot" colspan="4">Sem dados</td></tr>');
+}
+function candRenderTable(){
+  var t=document.getElementById('candTable'); if(!t) return;
+  var rows=candFiltered();
+  var cols=[
+    {k:'recrutador',label:'Recrutador',w:140},
+    {k:'plataforma',label:'Plataforma',w:130},
+    {k:'nome',label:'Candidato',w:180},
+    {k:'cidade',label:'Cidade',w:140},
+    {k:'dataEntrevista',label:'Data Entrevista',w:120},
+    {k:'entrevistaRealizada',label:'Entrevista?',w:90},
+    {k:'aprovado',label:'Aprovado',w:90},
+    {k:'dataTeste',label:'Data Teste',w:110},
+    {k:'realizouTeste',label:'Teste?',w:80},
+    {k:'contratado',label:'Contratado',w:100},
+    {k:'_status',label:'Status',w:110}
+  ];
+  var html='<colgroup>'+cols.map(function(c){return '<col style="width:'+c.w+'px">';}).join('')+'</colgroup>';
+  html+='<thead><tr class="cols">';
+  cols.forEach(function(c){ html+='<th style="top:0">'+esc(c.label)+'</th>'; });
+  html+='</tr></thead><tbody>';
+  if(!rows.length) html+='<tr><td colspan="'+cols.length+'" class="empty">Nenhum candidato.</td></tr>';
+  rows.forEach(function(c){
+    var st=candDeriveStatus(c);
+    html+='<tr>';
+    cols.forEach(function(col){
+      var val=(col.k==='_status')?st:(c[col.k]||'');
+      html+='<td>'+esc(val)+'</td>';
+    });
+    html+='</tr>';
+  });
+  html+='</tbody>'; t.innerHTML=html;
+  t.style.width=t.style.minWidth=(cols.reduce(function(a,c){return a+c.w;},0))+'px';
+  var cur=candCurrentVagas(); var info=document.getElementById('candInfo'); if(info) info.textContent=rows.length+' de '+cur.length+' candidatos';
+}
+function renderCand(){
+  candPopulateMonths();
+  candRenderCards();
+  candRenderSummary();
+  candRenderTable();
+}
+
 function helpShow(which){ var f=document.getElementById('helpFin'), r=document.getElementById('helpRs'); if(f) f.style.display=(which==='rs')?'none':''; if(r) r.style.display=(which==='rs')?'':'none'; document.querySelectorAll('.help-t').forEach(function(b){ b.classList.toggle('active',b.dataset.h===which); }); var bd=document.querySelector('.help-body'); if(bd) bd.scrollTop=0; }
 function openHelp(){ var m=document.getElementById('helpModal'); if(!m) return; helpShow((typeof currentMenu!=='undefined'&&currentMenu)?currentMenu:'fin'); m.classList.add('show'); }
 function closeHelp(){ var m=document.getElementById('helpModal'); if(m) m.classList.remove('show'); }
@@ -2227,6 +2389,10 @@ function init(){
   var _slMi=document.getElementById('slaMesInp'); if(_slMi) _slMi.addEventListener('change',function(){ state.slaMesTab=_slMi.value||''; state.slaMes=SLA_TAB_LABEL[_slMi.value]||_slMi.value||''; save(); slaRenderSummary(); slaRenderTable(); });
   bindTable('slaTable','slaVagas',{recalc:slaRecalc,render:renderSla});
   var _slt=document.getElementById('slaTable'); if(_slt) _slt.addEventListener('change',function(e){ if(e.target.closest('select')){ var tr=e.target.closest('tr[data-id]'); if(tr){ var rec=findRec('slaVagas',tr.dataset.id); if(rec){ var td=tr.querySelector('[data-slacalc]'); if(td){ var s=slaCalc(rec); td.textContent=(s==null?'—':(s+' d')); } slaRenderSummary(); } } } });
+  // Candidatos listeners
+  var _cdMi=document.getElementById('candMesInp'); if(_cdMi) _cdMi.addEventListener('change',function(){ state.candMesTab=_cdMi.value||''; save(); renderCand(); });
+  ['candSearch','candStatus','candRecr'].forEach(function(id){ var el=document.getElementById(id); if(el) el.addEventListener('input',function(){ candRenderSummary(); candRenderTable(); }); });
+
   var _slaLastDay=new Date().toDateString();
   function _slaDayRefresh(){ var t=new Date().toDateString(); if(t!==_slaLastDay){ _slaLastDay=t; try{ switchView(currentView); }catch(e){} } }
   setInterval(_slaDayRefresh,60000);
@@ -2290,6 +2456,10 @@ const SHEETS_CFG = {
   },
   sla: {
     id: '1BvVTBMcJOgKAoTRdeNaO5DALjlLZtp6t0uRbm3AQIfQ',
+    tabs: ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez']
+  },
+  candidatos: {
+    id: '1DXx9eiKnvi8uFBD7losT_PHZLF3BFNcMD57tzIevkCU',
     tabs: ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez']
   }
 };
@@ -2437,6 +2607,31 @@ function mapSlaRow(row){
   };
 }
 
+function mapCandidatoRow(row){
+  const nome = colStr(row,['Nome do Candidato','NOME DO CANDIDATO','Nome do candidato']);
+  if(!nome) return null;
+  return {
+    recrutador: colStr(row,['Recrutador','RECRUTADOR','recrutador']),
+    plataforma: colStr(row,['Plataforma utilizada','PLATAFORMA UTILIZADA','Plataforma Utilizada']),
+    standby: colStr(row,['Stand-by','STAND-BY','Stand-By','Stand by']),
+    standBySim: colStr(row,['Stand By?','STAND BY?','Stand by?']),
+    nome: nome,
+    contato: colStr(row,['Contato','CONTATO','contato']),
+    horario: colStr(row,['Horário Agendado','HORÁRIO AGENDADO','Horario Agendado']),
+    cidade: colStr(row,['Cidade do Candidato','CIDADE DO CANDIDATO','Cidade do candidato']),
+    dataEntrevista: colStr(row,['Data da Entrevista','DATA DA ENTREVISTA','Data da entrevista']),
+    entrevistaRealizada: colStr(row,['Entrevista Realizada?','ENTREVISTA REALIZADA?','Entrevista realizada?']),
+    aprovado: colStr(row,['Aprovado/R&S','APROVADO/R&S','Aprovado/R&s','Aprovado/RS','APROVADO/RS']),
+    dataTeste: colStr(row,['Data do Teste Prático','DATA DO TESTE PRÁTICO','Data do Teste Pratico']),
+    desistencia: colStr(row,['Desistências','DESISTÊNCIAS','Desistencias','Desistência']),
+    realizouTeste: colStr(row,['Realizou o Teste?','REALIZOU O TESTE?','Realizou o teste?']),
+    contratado: colStr(row,['Contratado','CONTRATADO','contratado']),
+    tipoContratacao: colStr(row,['Tipo de Contratação','TIPO DE CONTRATAÇÃO','Tipo de Contratacao']),
+    desistenciaContratacao: colStr(row,['Desistência Contratação','DESISTÊNCIA CONTRATAÇÃO','Desistencia Contratacao']),
+    observacao: colStr(row,['Observação','OBSERVAÇÃO','Observacao'])
+  };
+}
+
 let _syncing = false;
 async function syncFromSheets(){
   if(_syncing) return;
@@ -2485,6 +2680,21 @@ async function syncFromSheets(){
       }
     }
 
+    // 4) Sync Candidatos (each month tab stored separately)
+    if(!state.candMeses) state.candMeses={};
+    for(const tab of SHEETS_CFG.candidatos.tabs){
+      try {
+        const candRows = await fetchSheet(SHEETS_CFG.candidatos.id, tab);
+        const mapped = candRows.map(mapCandidatoRow).filter(Boolean);
+        if(mapped.length){
+          stamp(mapped);
+          state.candMeses[tab] = mapped;
+        }
+      } catch(e){
+        console.warn('Sync Candidatos tab "'+tab+'" falhou:', e.message);
+      }
+    }
+
     save();
     // Re-render everything
     renderPag();
@@ -2492,6 +2702,7 @@ async function syncFromSheets(){
     renderDash();
     updateCounts();
     try{ renderSla(); }catch(e){}
+    try{ renderCand(); }catch(e){}
     setSave('saved');
     if(btn){ btn.querySelector('span:last-child').textContent='Sincronizado ✓'; setTimeout(()=>{ btn.querySelector('span:last-child').textContent='Sincronizar'; },3000); }
   } catch(e){
