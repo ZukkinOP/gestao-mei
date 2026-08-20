@@ -2482,7 +2482,7 @@ async function fetchSheet(spreadsheetId, sheetName){
   const data = JSON.parse(jsonTxt);
   if(!data.table) throw new Error('Sem dados na aba: '+sheetName);
   // extract headers from first row
-  const cols = data.table.cols.map(c=>(c.label||'').trim());
+  const cols = data.table.cols.map(c=>(c.label||'').replace(/[\r\n]+/g,' ').replace(/\s+/g,' ').trim());
   const rows = (data.table.rows||[]).map(r=>{
     const obj={};
     (r.c||[]).forEach((cell,i)=>{
