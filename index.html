@@ -127,6 +127,8 @@ main{padding:16px}
 /* ---------- Table ---------- */
 .tablewrap{background:var(--panel);border:1px solid var(--line);border-radius:12px;overflow:auto;box-shadow:var(--shadow);max-height:calc(100vh - 210px)}
 #candTable tbody tr:nth-child(even){background:#e8eef4}#candTable tbody tr:nth-child(odd){background:#fff}#candTable tbody tr:hover{background:#dce7f0}
+#candTable input{background:transparent;border:none;outline:none;width:100%;font:inherit;padding:0;color:inherit}#candTable input:focus{background:rgba(2,56,90,.06);border-radius:4px}
+#candTable .delbtn{background:none;border:none;color:#cf110d;font-size:16px;cursor:pointer;padding:2px 6px;border-radius:6px;font-weight:700;opacity:.5}#candTable .delbtn:hover{opacity:1;background:#fecdd3}
 table{border-collapse:separate;border-spacing:0;white-space:nowrap;table-layout:fixed}
 th,td{padding:0;border-bottom:1px solid var(--line2);border-right:1px solid var(--line2);text-align:center;font-weight:400;overflow:hidden;text-overflow:ellipsis}
 thead th{position:sticky;background:#f7f9fc;z-index:5;font-size:11px;color:var(--muted);font-weight:600;padding:6px 8px;text-transform:uppercase;letter-spacing:.2px}
@@ -525,6 +527,7 @@ kbd{background:#f1f3f7;border:1px solid var(--line);border-radius:5px;padding:1p
       <div class="search" style="margin-left:8px"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4-4"/></svg><input id="candSearch" placeholder="Buscar candidato, cidade, recrutador..."></div>
       <select id="candStatus"><option value="">Todos status</option><option value="Aprovado">Aprovado</option><option value="Reprovado">Reprovado</option><option value="Contratado">Contratado</option><option value="Desistência">Desistência</option><option value="Stand-by">Stand-by</option><option value="Em processo">Em processo</option></select>
       <select id="candRecr"><option value="">Todos recrutadores</option></select>
+      <button class="btn primary" id="candAdd" style="margin-left:auto">+ Novo candidato</button>
     </div>
     <div class="cards" id="candCards"></div>
     <div class="dash-grid">
@@ -2248,48 +2251,69 @@ var CAND_PASTEL_RECR=[
 var _candPlatMap={}, _candRecrMap={}, _candPlatIdx=0, _candRecrIdx=0;
 function candPlatColor(p){ var k=(p||'').trim().toLowerCase(); if(!k) return null; if(!_candPlatMap[k]){ _candPlatMap[k]=CAND_PASTEL_PLAT[_candPlatIdx % CAND_PASTEL_PLAT.length]; _candPlatIdx++; } return _candPlatMap[k]; }
 function candRecrColor(r){ var k=(r||'').trim().toLowerCase(); if(!k) return null; if(!_candRecrMap[k]){ _candRecrMap[k]=CAND_PASTEL_RECR[_candRecrIdx % CAND_PASTEL_RECR.length]; _candRecrIdx++; } return _candRecrMap[k]; }
-function candCellHtml(col, val){
-  var v=esc(val);
-  if(!val || !val.trim()) return '<td>'+v+'</td>';
+function candPillHtml(val,bg,txt){ return '<span style="display:inline-block;padding:2px 10px;border-radius:8px;font-size:11px;font-weight:600;background:'+bg+';color:'+txt+'">'+esc(val)+'</span>'; }
+function candStatusPill(val){
+  var sc={Contratado:{bg:'#d1fae5',txt:'#065f46'},Aprovado:{bg:'#dbeafe',txt:'#1e40af'},'Desistência':{bg:'#fecdd3',txt:'#9f1239'},'Stand-by':{bg:'#fef3c7',txt:'#92400e'},Reprovado:{bg:'#fecdd3',txt:'#9f1239'},'Em processo':{bg:'#e0e7ff',txt:'#3730a3'}};
+  var c=sc[val]||{bg:'#f1f5f9',txt:'#475569'}; return candPillHtml(val,c.bg,c.txt);
+}
+function candDecorateCell(td,col,val){
+  if(!val||!val.trim()) return;
   var lo=val.trim().toLowerCase();
   if(col.k==='entrevistaRealizada'||col.k==='aprovado'||col.k==='realizouTeste'||col.k==='standBySim'||col.k==='contratado'){
-    if(lo==='sim'||lo==='s'||lo==='yes') return '<td><span style="display:inline-block;padding:2px 10px;border-radius:8px;font-size:11px;font-weight:600;background:#d1fae5;color:#065f46">'+v+'</span></td>';
-    if(lo==='não'||lo==='nao'||lo==='no'||lo==='n') return '<td><span style="display:inline-block;padding:2px 10px;border-radius:8px;font-size:11px;font-weight:600;background:#fecdd3;color:#9f1239">'+v+'</span></td>';
+    if(lo==='sim'||lo==='s'||lo==='yes'){ td.style.background='#d1fae5'; return; }
+    if(lo==='não'||lo==='nao'||lo==='no'||lo==='n'){ td.style.background='#fecdd3'; return; }
   }
-  if(col.k==='plataforma'){ var pc=candPlatColor(val); if(pc) return '<td><span style="display:inline-block;padding:2px 10px;border-radius:8px;font-size:11px;font-weight:600;background:'+pc.bg+';color:'+pc.txt+'">'+v+'</span></td>'; }
-  if(col.k==='recrutador'){ var rc=candRecrColor(val); if(rc) return '<td><span style="display:inline-block;padding:2px 10px;border-radius:8px;font-size:11px;font-weight:600;background:'+rc.bg+';color:'+rc.txt+'">'+v+'</span></td>'; }
-  if(col.k==='_status'){
-    var sc={Contratado:{bg:'#d1fae5',txt:'#065f46'},Aprovado:{bg:'#dbeafe',txt:'#1e40af'},'Desistência':{bg:'#fecdd3',txt:'#9f1239'},'Stand-by':{bg:'#fef3c7',txt:'#92400e'},Reprovado:{bg:'#fecdd3',txt:'#9f1239'},'Em processo':{bg:'#e0e7ff',txt:'#3730a3'}};
-    var stc=sc[val]||{bg:'#f1f5f9',txt:'#475569'};
-    return '<td><span style="display:inline-block;padding:2px 10px;border-radius:8px;font-size:11px;font-weight:600;background:'+stc.bg+';color:'+stc.txt+'">'+v+'</span></td>';
-  }
-  return '<td>'+v+'</td>';
+  if(col.k==='plataforma'){ var pc=candPlatColor(val); if(pc){ td.style.background=pc.bg; td.style.color=pc.txt; } }
+  if(col.k==='recrutador'){ var rc=candRecrColor(val); if(rc){ td.style.background=rc.bg; td.style.color=rc.txt; } }
+}
+var CAND_COLS=[
+  {k:'recrutador',label:'Recrutador',w:130},
+  {k:'plataforma',label:'Plataforma Utilizada',w:150},
+  {k:'standby',label:'Stand-by',w:100},
+  {k:'standBySim',label:'Stand By?',w:90},
+  {k:'nome',label:'Nome do Candidato',w:200},
+  {k:'contato',label:'Contato',w:140},
+  {k:'horario',label:'Horário Agendado',w:145},
+  {k:'cidade',label:'Cidade do Candidato',w:160},
+  {k:'dataEntrevista',label:'Data da Entrevista',w:140},
+  {k:'entrevistaRealizada',label:'Entrevista Realizada?',w:160},
+  {k:'aprovado',label:'Aprovado/R&S',w:120},
+  {k:'dataTeste',label:'Data do Teste Prático',w:160},
+  {k:'desistencia',label:'Desistências',w:120},
+  {k:'realizouTeste',label:'Realizou o Teste?',w:140},
+  {k:'contratado',label:'Contratado',w:110},
+  {k:'tipoContratacao',label:'Tipo de Contratação',w:155},
+  {k:'desistenciaContratacao',label:'Desistência Contratação',w:175},
+  {k:'observacao',label:'Observação',w:160},
+  {k:'_status',label:'Status',w:110},
+  {k:'_del',label:'',w:40}
+];
+function addCand(){
+  var sel=document.getElementById('candMesInp');
+  var key=(sel&&sel.value)||state.candMesTab||'';
+  if(!key){ var ks=Object.keys(state.candMeses||{}); key=ks.length?ks[ks.length-1]:'Ago'; }
+  if(!state.candMeses) state.candMeses={};
+  if(!state.candMeses[key]) state.candMeses[key]=[];
+  state.candMeses[key].unshift({_id:freshId(),recrutador:'',plataforma:'',standby:'',standBySim:'',nome:'Novo candidato',contato:'',horario:'',cidade:'',dataEntrevista:'',entrevistaRealizada:'',aprovado:'',dataTeste:'',desistencia:'',realizouTeste:'',contratado:'',tipoContratacao:'',desistenciaContratacao:'',observacao:''});
+  if(sel) sel.value=key; state.candMesTab=key;
+  save(); renderCand(); updateCounts(); toast('Candidato adicionado — edite os campos'); focusFirst('candTable');
+}
+function delCand(id){
+  var key=state.candMesTab||'';
+  if(!key||!state.candMeses||!state.candMeses[key]) return;
+  var arr=state.candMeses[key]; var rec=arr.find(function(x){return x._id===id;});
+  if(!rec) return;
+  confirmModal('Excluir candidato','Remover <b>'+esc(rec.nome||'este candidato')+'</b>? Esta ação não pode ser desfeita.',function(){
+    state.candMeses[key]=arr.filter(function(x){return x._id!==id;});
+    save(); renderCand(); updateCounts(); toast('Candidato excluído');
+  });
 }
 function candRenderTable(){
   var t=document.getElementById('candTable'); if(!t) return;
   var rows=candFiltered();
   _candPlatMap={}; _candRecrMap={}; _candPlatIdx=0; _candRecrIdx=0;
-  var cols=[
-    {k:'recrutador',label:'Recrutador',w:130},
-    {k:'plataforma',label:'Plataforma Utilizada',w:150},
-    {k:'standby',label:'Stand-by',w:100},
-    {k:'standBySim',label:'Stand By?',w:90},
-    {k:'nome',label:'Nome do Candidato',w:200},
-    {k:'contato',label:'Contato',w:140},
-    {k:'horario',label:'Horário Agendado',w:145},
-    {k:'cidade',label:'Cidade do Candidato',w:160},
-    {k:'dataEntrevista',label:'Data da Entrevista',w:140},
-    {k:'entrevistaRealizada',label:'Entrevista Realizada?',w:160},
-    {k:'aprovado',label:'Aprovado/R&S',w:120},
-    {k:'dataTeste',label:'Data do Teste Prático',w:160},
-    {k:'desistencia',label:'Desistências',w:120},
-    {k:'realizouTeste',label:'Realizou o Teste?',w:140},
-    {k:'contratado',label:'Contratado',w:110},
-    {k:'tipoContratacao',label:'Tipo de Contratação',w:155},
-    {k:'desistenciaContratacao',label:'Desistência Contratação',w:175},
-    {k:'observacao',label:'Observação',w:160},
-    {k:'_status',label:'Status',w:110}
-  ];
+  var cols=CAND_COLS;
+  var tw=cols.reduce(function(a,c){return a+c.w;},0);
   var html='<colgroup>'+cols.map(function(c){return '<col style="width:'+c.w+'px">';}).join('')+'</colgroup>';
   html+='<thead><tr class="cols">';
   cols.forEach(function(c){ html+='<th style="top:0">'+esc(c.label)+'</th>'; });
@@ -2299,14 +2323,20 @@ function candRenderTable(){
     var st=candDeriveStatus(c);
     html+='<tr>';
     cols.forEach(function(col){
-      var val=(col.k==='_status')?st:(c[col.k]||'');
-      html+=candCellHtml(col,val);
+      if(col.k==='_status'){ html+='<td>'+candStatusPill(st)+'</td>'; return; }
+      if(col.k==='_del'){ html+='<td style="text-align:center"><button class="delbtn" data-cdel="'+c._id+'" title="Excluir">&times;</button></td>'; return; }
+      var val=c[col.k]||'';
+      html+='<td><input data-cid="'+c._id+'" data-ck="'+col.k+'" value="'+esc(val).replace(/"/g,'&quot;')+'" spellcheck="false"></td>';
     });
     html+='</tr>';
   });
   html+='</tbody>'; t.innerHTML=html;
-  t.style.width=t.style.minWidth=(cols.reduce(function(a,c){return a+c.w;},0))+'px';
+  t.style.width=t.style.minWidth=tw+'px';
   var cur=candCurrentVagas(); var info=document.getElementById('candInfo'); if(info) info.textContent=rows.length+' de '+cur.length+' candidatos';
+  t.querySelectorAll('input[data-cid]').forEach(function(inp){
+    var col=cols.find(function(c){return c.k===inp.dataset.ck;});
+    if(col) candDecorateCell(inp.parentElement,col,inp.value);
+  });
 }
 function renderCand(){
   candPopulateMonths();
@@ -2434,6 +2464,23 @@ function init(){
   // Candidatos listeners
   var _cdMi=document.getElementById('candMesInp'); if(_cdMi) _cdMi.addEventListener('change',function(){ state.candMesTab=_cdMi.value||''; save(); renderCand(); });
   ['candSearch','candStatus','candRecr'].forEach(function(id){ var el=document.getElementById(id); if(el) el.addEventListener('input',function(){ candRenderSummary(); candRenderTable(); }); });
+  var _caBtn=document.getElementById('candAdd'); if(_caBtn) _caBtn.addEventListener('click',addCand);
+  var _caTbl=document.getElementById('candTable');
+  if(_caTbl){
+    _caTbl.addEventListener('input',function(e){
+      var inp=e.target.closest('input[data-cid]'); if(!inp) return;
+      var key=state.candMesTab||''; var arr=(state.candMeses&&state.candMeses[key])||[];
+      var rec=arr.find(function(x){return x._id===inp.dataset.cid;}); if(!rec) return;
+      rec[inp.dataset.ck]=inp.value;
+      var col=CAND_COLS.find(function(c){return c.k===inp.dataset.ck;});
+      if(col){ inp.parentElement.style.background=''; inp.parentElement.style.color=''; candDecorateCell(inp.parentElement,col,inp.value); }
+      save();
+    });
+    _caTbl.addEventListener('click',function(e){
+      var db=e.target.closest('[data-cdel]'); if(!db) return;
+      delCand(db.dataset.cdel);
+    });
+  }
 
   var _slaLastDay=new Date().toDateString();
   function _slaDayRefresh(){ var t=new Date().toDateString(); if(t!==_slaLastDay){ _slaLastDay=t; try{ switchView(currentView); }catch(e){} } }
